@@ -23,7 +23,7 @@
                   <v-flex>
                     <v-label>City:</v-label>
                   </v-flex>
-                  <v-flex>
+                  <v-flex v-if="resource.zip">
                     <v-label>Zip:</v-label>
                   </v-flex>
                   <v-flex>
@@ -43,9 +43,9 @@
                   <v-flex>{{ resource.country_name }}</v-flex>
                   <v-flex>{{ resource.region_name }}</v-flex>
                   <v-flex>{{ resource.city }}</v-flex>
-                  <v-flex>{{ resource.zip }}</v-flex>
-                  <v-flex>{{ resource.latitude }}</v-flex>
-                  <v-flex>{{ resource.longitude }}</v-flex>
+                  <v-flex v-if="resource.zip">{{ resource.zip }}</v-flex>
+                  <v-flex>{{ ConvertDDToDMS(resource.latitude) }}</v-flex>
+                  <v-flex>{{ ConvertDDToDMS(resource.longitude, true) }}</v-flex>
                   <v-flex v-if="resource.country_code">
                     <country-flag :country="resource.country_code"></country-flag>
                   </v-flex>
@@ -63,7 +63,12 @@
           <span class="subheading">OpenStreetMap</span>
         </v-card-title>
         <v-divider></v-divider>
-        <l-map :zoom="zoom" :center="center" :options="mapOptions" style="height: 360px; z-index: 0;">
+        <l-map
+          :zoom="zoom"
+          :center="center"
+          :options="mapOptions"
+          style="height: 360px; z-index: 0;"
+        >
           <l-tile-layer :url="url" :attribution="attribution" />
           <l-marker :lat-lng="withPopup"></l-marker>
         </l-map>
@@ -117,6 +122,21 @@ export default {
     resource: function() {
       let plugin_result = { ...this.plugin_data.results };
       return plugin_result;
+    }
+  },
+  methods: {
+    // https://stackoverflow.com/questions/5786025/decimal-degrees-to-degrees-minutes-and-seconds-in-javascript
+    ConvertDDToDMS: function(D, lng) {
+      const M = 0 | ((D % 1) * 60e7);
+
+      let coord = {
+        dir: D < 0 ? (lng ? "W" : "S") : lng ? "E" : "N",
+        deg: 0 | (D < 0 ? (D = -D) : D),
+        min: 0 | (M / 1e7),
+        sec: (0 | (((M / 1e6) % 1) * 6e4)) / 100
+      };
+
+      return `${coord.deg}º ${coord.min}' ${coord.sec}" ${coord.dir}`;
     }
   }
 };

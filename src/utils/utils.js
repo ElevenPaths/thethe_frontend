@@ -27,4 +27,30 @@ function from_python_time(python_time) {
   return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
 }
 
-export { object_is_empty, make_unique_list, from_python_time };
+/*
+  params:
+    ts number of milliseconds or seconds since epoch
+*/
+function timestamp_diff_from_now(ts) {
+  if (ts < 1500000000000) ts *= 1000;
+
+  let diff = Date.now() - ts;
+
+  let days = Math.floor(diff / 1000 / 60 / 60 / 24);
+  diff -= days * 1000 * 60 * 60 * 24;
+
+  let hours = Math.floor(diff / 1000 / 60 / 60);
+  diff -= hours * 1000 * 60 * 60;
+
+  let minutes = Math.floor(diff / 1000 / 60 / 60);
+  diff -= minutes * 1000 * 60;
+
+  return { days: days, hours: hours, minutes: minutes };
+}
+
+export {
+  object_is_empty,
+  make_unique_list,
+  from_python_time,
+  timestamp_diff_from_now
+};
