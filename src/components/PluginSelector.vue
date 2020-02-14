@@ -13,26 +13,7 @@
         </v-subheader>
         <v-divider></v-divider>
         <v-list-tile v-for="plugin in plugin_list" :key="plugin.name" avatar two-line>
-          <v-list-tile-avatar>
-            <v-btn
-              v-if="!plugin.apikey_in_ddbb && plugin.api_key"
-              flat
-              icon
-              color="error"
-              :href="plugin.api_doc"
-              target="_blank"
-            >
-              <v-icon>warning</v-icon>
-            </v-btn>
-            <v-btn v-else flat icon style="visibility: hidden">
-              <v-icon>warning</v-icon>
-            </v-btn>
-          </v-list-tile-avatar>
           <v-layout>
-            <v-list-tile-avatar class="pt-2">
-              <v-icon v-if="plugin.is_active" :color="avatar_color(plugin.last_update)">warning</v-icon>
-              <v-icon v-else :color="avatar_color(plugin.last_update)">info</v-icon>
-            </v-list-tile-avatar>
             <v-btn
               class="text-lowercase"
               block
@@ -45,9 +26,18 @@
             >
               <v-list-tile-content>
                 <v-list-tile-title class="subheading font-weight-bold">
-                  {{
-                  plugin.name
-                  }}
+                  <v-layout>
+                    {{
+                    plugin.name
+                    }}
+                    <v-icon
+                      v-if="!plugin.apikey_in_ddbb && plugin.api_key"
+                      small
+                      color="error"
+                      dark
+                      class="ml-1"
+                    >mdi-alert</v-icon>
+                  </v-layout>
                 </v-list-tile-title>
                 <v-list-tile-sub-title>
                   <v-layout>
@@ -56,7 +46,7 @@
                 </v-list-tile-sub-title>
               </v-list-tile-content>
               <v-list-tile-action>
-                <chip-time-from-now v-if="plugin.last_update" :timestamp="plugin.last_update"></chip-time-from-now>
+                <chip-time-from-now :timestamp="plugin.last_update"></chip-time-from-now>
               </v-list-tile-action>
             </v-btn>
           </v-layout>
@@ -67,14 +57,6 @@
             <v-icon color="error" style="margin: 0px 8px">warning</v-icon>
             <span style="padding: 0px 10px">
               <b>Needs API Key</b>
-            </span>
-            <v-icon color="green" style="margin: 0px 8px">info</v-icon>
-            <span style="padding: 0px 10px">
-              <b>Never launched</b>
-            </span>
-            <v-icon color="blue" style="margin: 0px 8px">info</v-icon>
-            <span style="padding: 0px 10px">
-              <b>Already launched</b>
             </span>
           </v-flex>
         </v-subheader>
@@ -117,6 +99,7 @@ export default {
         })
         .then(resp => this.update_pluginglist_dates());
     },
+
     loading: function(plugin) {
       this.$store.dispatch("loading", {
         _id: this.resource._id,
@@ -124,6 +107,7 @@ export default {
         plugin: plugin
       });
     },
+
     launch: function(entry) {
       let params = {
         url: "/api/launch_plugin",
@@ -134,11 +118,6 @@ export default {
 
       this.loading(entry.name);
       api_call(params);
-    },
-
-    avatar_color: function(date) {
-      if (date !== null) return "blue";
-      return "green";
     },
 
     update_pluginglist_dates: function() {

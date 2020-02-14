@@ -1,5 +1,5 @@
 <template>
-  <v-chip :color="which_color()" class="caption">{{ what_to_print() }}</v-chip>
+  <v-chip :color="which_color()" class="caption font-weight-bold">{{ what_to_print() }}</v-chip>
 </template>
 
 <script>
@@ -9,6 +9,8 @@ export default {
   computed: {
     timestamp_diff_from_now: function() {
       let ts = this.timestamp;
+
+      if (!ts) return null;
 
       if (ts < 1500000000000) ts *= 1000;
 
@@ -30,12 +32,16 @@ export default {
     what_to_print: function() {
       let diff = this.timestamp_diff_from_now;
 
+      if (!diff) {
+        return `not launched yet`;
+      }
+
       if (diff.days == 0 && diff.hours == 0) {
         return `just ${diff.minutes} mins ago`;
       }
 
       if (diff.days == 0 && diff.hours > 0) {
-        return `${diff.hours}h ${diff.minutes}m ago`;
+        return `${diff.hours} hours and ${diff.minutes} mins ago`;
       }
 
       if (diff.days > 0 && diff.days < 10) {
@@ -43,33 +49,44 @@ export default {
       }
 
       if (diff.days > 0) {
-        return `${diff.days} days ago`;
+        return `more than ${diff.days} days ago`;
       }
     },
     which_color: function() {
+      if (!this.timestamp_diff_from_now) {
+        return "grey darken-1";
+      }
+
       let days = this.timestamp_diff_from_now.days;
+
+      // Just launched
       if (days == 0) {
+        return "light-blue";
+      }
+
+      // 24 hrs
+      if (days > 0 && days < 2) {
         return "green";
       }
 
-      if (days > 0 && days < 2) {
-        return "green darken-1";
-      }
-
+      // More than one day less than three
       if (days >= 2 && days < 3) {
-        return "green lighten-2";
+        return "light green";
       }
 
+      // Less than a week
       if (days >= 3 && days < 7) {
-        return "light-blue accent-2";
+        return "amber";
       }
 
+      // Almost half month
       if (days >= 7 && days < 15) {
-        return "orange lighten-3";
+        return "orange";
       }
 
+      // More than 30 days
       if (days >= 15) {
-        return "red darken-1";
+        return "red";
       }
     }
   }
