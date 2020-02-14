@@ -76,8 +76,8 @@
             <v-flex>
               <v-text-field
                 v-model="search"
-                prepend-icon="search"
-                label="Search"
+                prepend-icon="mdi-filter-outline"
+                label="Filter"
                 single-line
                 hide-details
                 clearable
