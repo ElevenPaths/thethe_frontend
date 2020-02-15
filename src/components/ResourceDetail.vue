@@ -23,17 +23,9 @@
           <v-tab-item v-for="entry in sorted_plugin_list" :key="entry.index" lazy>
             <dynamic-link :type="entry.plugin.name" :data="entry.plugin" :key="component_key"></dynamic-link>
             <v-divider></v-divider>
-            <v-flex>
-              <v-layout column>
-                <v-flex v-if="entry.plugin.creation_time" lg3 caption text-xs-left>
-                  Created:
-                  {{ from_python_time(entry.plugin.creation_time) }}
-                </v-flex>
-                <v-flex v-if="entry.plugin.update_time" caption text-xs-left>
-                  Last update:
-                  {{ from_python_time(entry.plugin.update_time) }}
-                </v-flex>
-              </v-layout>
+            <v-flex v-if="entry.plugin.timestamp" caption text-xs-left>
+              Last update:
+              {{ from_python_time(entry.plugin.timestamp) }}
             </v-flex>
           </v-tab-item>
         </v-tabs-items>

@@ -126,7 +126,7 @@ export default {
           elem => elem.name.localeCompare(plugin.name) == 0
         );
         if (typeof match !== "undefined") {
-          plugin.last_update = match.update_time;
+          plugin.last_update = match.timestamp;
         } else {
           plugin.last_update = null;
         }
