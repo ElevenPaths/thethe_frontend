@@ -12,10 +12,32 @@ const state = {
 };
 
 const actions = {
+  lazy_plugin_results: async function({ commit }, params) {
+    let url = "/api/get_lazy_plugin_results";
+
+    commit("loading_resources", true);
+
+    Vue.notify({
+      type: "info",
+      title: `<b>${params.plugin_name}</b>`,
+      text: `Loading history waypoint`
+    });
+
+    await api_call({ url: url, params })
+      .then(resp => {
+        commit("update_resource", resp.data);
+      })
+      .catch(err => console.log(err))
+      .finally(() => {
+        commit("loading_resources", false);
+      });
+  },
   get_resources: async function({ commit, getters }) {
     let url = "/api/get_resources";
     let project_id = getters.get_opened_project._id;
+
     commit("loading_resources", true);
+
     Vue.notify({
       type: "info",
       title: `<b>Loading resources</b>`,
@@ -25,9 +47,11 @@ const actions = {
     await api_call({ url: url, project_id: project_id })
       .then(resp => {
         commit("set_resources", resp.data);
-        commit("loading_resources", false);
       })
-      .catch(err => console.log(err));
+      .catch(err => console.log(err))
+      .finally(() => {
+        commit("loading_resources", false);
+      });
   },
 
   add_new_resource: async function({ commit }, payload) {
@@ -94,6 +118,11 @@ const mutations = {
         state.resources.push(resource);
       }
     });
+  },
+
+  update_resource: function(commit, resource) {
+    let resource_target = state.resources.find(el => el._id === resource._id);
+    resource_target.plugins = resource.plugins;
   },
 
   reset_resource_lists: function() {

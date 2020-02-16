@@ -12,8 +12,7 @@
               :width="15"
               :value="resource.abuseConfidenceScore"
               :color="abuse_confidence_score_color"
-              >{{ resource.abuseConfidenceScore }}%</v-progress-circular
-            >
+            >{{ resource.abuseConfidenceScore }}%</v-progress-circular>
           </v-flex>
           <v-flex offset-lg1>
             <v-layout column>

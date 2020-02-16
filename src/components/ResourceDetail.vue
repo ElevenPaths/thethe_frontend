@@ -23,10 +23,27 @@
           <v-tab-item v-for="entry in sorted_plugin_list" :key="entry.index" lazy>
             <dynamic-link :type="entry.plugin.name" :data="entry.plugin" :key="component_key"></dynamic-link>
             <v-divider></v-divider>
-            <v-flex v-if="entry.plugin.timestamp" caption text-xs-left>
-              Last update:
-              {{ from_python_time(entry.plugin.timestamp) }}
-            </v-flex>
+            <v-layout v-if="entry.plugin.timestamp" align-center justify-start row fill-height wrap>
+              <v-flex mx-4 v-if="entry.plugin.timemachine.length > 1">
+                <v-slider
+                  v-model="current_timestamp"
+                  :tick-labels="tick_labels(entry.plugin.timemachine)"
+                  :max="entry.plugin.timemachine.length - 1"
+                  ticks
+                  track-color="primary"
+                  class="caption"
+                  thumb-label="always"
+                ></v-slider>
+                <v-flex>
+                  <chip-time-from-now
+                    :timestamp="entry.plugin.timemachine[current_timestamp].timestamp"
+                  ></chip-time-from-now>
+                </v-flex>
+              </v-flex>
+              <v-flex v-else>
+                <chip-time-from-now :timestamp="entry.plugin.timestamp"></chip-time-from-now>
+              </v-flex>
+            </v-layout>
           </v-tab-item>
         </v-tabs-items>
       </v-tabs>
@@ -40,6 +57,7 @@
 
 <script>
 import DynamicLink from "./DynamicComponent";
+import ChipTimeFromNow from "./ChipTimeFromNow";
 import { from_python_time } from "../utils/utils";
 
 export default {
@@ -48,9 +66,9 @@ export default {
     grid_space: Number,
     resource: Object
   },
-  components: { DynamicLink },
+  components: { DynamicLink, ChipTimeFromNow },
   data: function() {
-    return { active: 0, component_key: 0 };
+    return { active: 0, component_key: 0, current_timestamp: 0 };
   },
   computed: {
     sorted_plugin_list: function() {
@@ -74,7 +92,11 @@ export default {
     }
   },
   methods: {
-    from_python_time: from_python_time
+    from_python_time: from_python_time,
+
+    tick_labels: function(timemachine) {
+      return Array.from(timemachine, elem => from_python_time(elem.timestamp));
+    }
   },
   watch: {
     resource: {
@@ -83,6 +105,16 @@ export default {
       deep: true,
       handler: function() {
         this.component_key += 1;
+      }
+    },
+    current_timestamp: {
+      handler: function() {
+        let params = {
+          resource_id: this.resource._id,
+          plugin_name: this.sorted_plugin_list[this.active].plugin.name,
+          timestamp_index: this.current_timestamp
+        };
+        this.$store.dispatch("lazy_plugin_results", params);
       }
     }
   }
