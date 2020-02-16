@@ -7,17 +7,25 @@ Vue.use(Vuex);
 
 const state = {
   resources: [],
-  running: []
+  running: [],
+  loading_resources: false
 };
 
 const actions = {
   get_resources: async function({ commit, getters }) {
     let url = "/api/get_resources";
     let project_id = getters.get_opened_project._id;
+    commit("loading_resources", true);
+    Vue.notify({
+      type: "info",
+      title: `<b>Loading resources</b>`,
+      text: `<b>Getting resources from server`
+    });
 
     await api_call({ url: url, project_id: project_id })
       .then(resp => {
         commit("set_resources", resp.data);
+        commit("loading_resources", false);
       })
       .catch(err => console.log(err));
   },
@@ -75,6 +83,9 @@ const actions = {
 };
 
 const mutations = {
+  loading_resources: function(commit, is_loading) {
+    state.loading_resources = is_loading;
+  },
   set_resources: function(commit, resources) {
     resources.forEach(resource => {
       if (state.resources.some(el => el._id === resource._id)) {
@@ -153,6 +164,9 @@ const getters = {
     return state.resources.filter(plugins =>
       plugins.plugins.some(results => results.results === "loading")
     );
+  },
+  is_loading: state => {
+    return state.loading_resources;
   }
 };
 

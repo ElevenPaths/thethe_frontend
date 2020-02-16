@@ -97,7 +97,6 @@
 
 <script>
 import validator from "validator";
-import api_call from "../utils/api";
 
 export default {
   name: "MultipleResourceInput",
@@ -107,6 +106,8 @@ export default {
       validate: false,
       dialog: false,
       user_type_patch_list: [],
+
+      //TODO: THIS DOES NOT SCALE UP WELL, AND YOU KNOW IT (Jules Churchs)
       types: ["ip", "email", "url", "domain", "hash", "username"]
     };
   },

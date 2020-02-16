@@ -88,9 +88,7 @@ export default {
     get_related_plugins: function() {
       let params = {
         url: "/api/get_related_plugins",
-        resource_id: this.resource._id,
-        resource_type: this.resource.resource_type,
-        project_id: this.$store.getters["get_opened_project"]._id
+        resource_type: this.resource.resource_type
       };
 
       api_call(params)

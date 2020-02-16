@@ -1,5 +1,6 @@
 <template>
   <v-app :dark="true">
+    <v-progress-linear v-if="is_loading" :indeterminate="true"></v-progress-linear>
     <v-toolbar class="grey darken-3" dark flat dense>
       <!-- <v-toolbar-title class="light-grey--text">TheehT</v-toolbar-title> -->
       <img src="static/images/thethe_big.png" height="36" width="100" />
@@ -296,7 +297,8 @@ export default {
     ...mapGetters([
       "get_opened_project",
       "is_project_opened",
-      "is_authenticated"
+      "is_authenticated",
+      "is_loading"
     ]),
     username: function() {
       return this.$store.getters["username"];
