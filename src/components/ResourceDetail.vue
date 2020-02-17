@@ -48,6 +48,16 @@
                 <chip-time-from-now :timestamp="entry.plugin.timestamp"></chip-time-from-now>
               </v-flex>
             </v-layout>
+            <v-layout>
+              <v-flex>
+                <differ
+                  v-if="current_timestamp !== 0"
+                  :plugin_name="entry.plugin.name"
+                  :resource_id="resource._id"
+                  :index="current_timestamp"
+                ></differ>
+              </v-flex>
+            </v-layout>
           </v-tab-item>
         </v-tabs-items>
       </v-tabs>
@@ -63,6 +73,7 @@
 import DynamicLink from "./DynamicComponent";
 import ChipTimeFromNow from "./ChipTimeFromNow";
 import CopyToClipboard from "./CopyToClipboard";
+import Differ from "./Differ";
 
 import { from_python_time } from "../utils/utils";
 
@@ -72,7 +83,7 @@ export default {
     grid_space: Number,
     resource: Object
   },
-  components: { DynamicLink, ChipTimeFromNow, CopyToClipboard },
+  components: { DynamicLink, ChipTimeFromNow, CopyToClipboard, Differ },
   data: function() {
     return { active: 0, component_key: 0, current_timestamp: 0 };
   },
