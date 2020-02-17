@@ -81,12 +81,30 @@
       </div>
       <v-flex v-else>
         <v-tabs v-model="active" slider-color="red">
-          <v-tab>NETWORK</v-tab>
-          <v-tab>DOMAIN</v-tab>
-          <v-tab>URL</v-tab>
-          <v-tab>HASH</v-tab>
-          <v-tab>EMAILS</v-tab>
-          <v-tab>USERNAMES</v-tab>
+          <v-tab>
+            NETWORK
+            <v-chip small>{{ get_resources("ip").length }}</v-chip>
+          </v-tab>
+          <v-tab>
+            DOMAIN
+            <v-chip small>{{ get_resources("domain").length }}</v-chip>
+          </v-tab>
+          <v-tab>
+            URL
+            <v-chip small>{{ get_resources("url").length }}</v-chip>
+          </v-tab>
+          <v-tab>
+            HASH
+            <v-chip small>{{ get_resources("hash").length }}</v-chip>
+          </v-tab>
+          <v-tab>
+            EMAIL
+            <v-chip small>{{ get_resources("email").length }}</v-chip>
+          </v-tab>
+          <v-tab>
+            USERNAME
+            <v-chip small>{{ get_resources("username").length }}</v-chip>
+          </v-tab>
           <v-spacer />
           <v-tab>FLOW</v-tab>
           <v-tab>ANALYSIS</v-tab>
@@ -298,7 +316,8 @@ export default {
       "get_opened_project",
       "is_project_opened",
       "is_authenticated",
-      "is_loading"
+      "is_loading",
+      "get_resources"
     ]),
     username: function() {
       return this.$store.getters["username"];

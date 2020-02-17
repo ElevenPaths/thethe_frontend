@@ -8,10 +8,10 @@
         <v-card-title class="pa-0">
           <v-card-text>
             <v-flex class="subheading blue--text text--lighten-2 text-xs-center ma-0 pa-0">
-              <v-flex>
+              <!-- <v-flex>
                 <slot name="title"></slot>
                 ({{ resource_count }})
-              </v-flex>
+              </v-flex>-->
             </v-flex>
           </v-card-text>
         </v-card-title>
