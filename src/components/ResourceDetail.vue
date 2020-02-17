@@ -35,9 +35,7 @@
                   thumb-label="always"
                 ></v-slider>
                 <v-flex>
-                  <chip-time-from-now
-                    :timestamp="entry.plugin.timemachine[current_timestamp].timestamp"
-                  ></chip-time-from-now>
+                  <chip-time-from-now :timestamp="entry.plugin.timestamp"></chip-time-from-now>
                 </v-flex>
               </v-flex>
               <v-flex v-else>
@@ -96,6 +94,16 @@ export default {
 
     tick_labels: function(timemachine) {
       return Array.from(timemachine, elem => from_python_time(elem.timestamp));
+    },
+
+    get_timestamp: function() {
+      try {
+        return entry.plugin.timemachine[current_timestamp].timestamp;
+      } catch {
+        console.log("*************");
+        console.log(this.current_timestamp);
+        console.log(entry);
+      }
     }
   },
   watch: {

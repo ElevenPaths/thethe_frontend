@@ -97,8 +97,8 @@ const actions = {
     commit("reset_resource_lists");
   },
 
-  update_resource: async function({ commit }, payload) {
-    commit("add_update", payload);
+  update_resource: function({ commit }, payload) {
+    commit("update_resource", payload);
   },
 
   loading({ commit }, payload) {
