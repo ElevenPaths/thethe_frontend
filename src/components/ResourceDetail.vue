@@ -2,15 +2,21 @@
   <v-flex :class="{ [`lg${12 - grid_space}`]: true }">
     <v-card>
       <v-card-title primary-title v-if="resource" class="py-1">
-        <v-card-text
-          v-if="resource.resource_type === 'hash'"
-          class="subheading text-xs-center pa-0"
-        >{{ resource.hash }}</v-card-text>
-        <v-card-text v-else class="subheading text-xs-center pa-0 font-weight-bold">
-          {{
-          resource.canonical_name
-          }}
-        </v-card-text>
+        <v-layout align-center justify-center>
+          <v-card-text
+            v-if="resource.resource_type === 'hash'"
+            class="subheading text-xs-center pa-0"
+          >
+            {{ resource.hash }}
+            <copy-to-clipboard :text_to_copy="resource.hash"></copy-to-clipboard>
+          </v-card-text>
+          <v-card-text v-else class="subheading text-xs-center pa-0 font-weight-bold">
+            {{
+            resource.canonical_name
+            }}
+            <copy-to-clipboard :text_to_copy="resource.canonical_name"></copy-to-clipboard>
+          </v-card-text>
+        </v-layout>
       </v-card-title>
       <v-divider></v-divider>
       <v-tabs slider-color="red" v-model="active" v-if="resource.plugins.length > 0">
@@ -56,6 +62,8 @@
 <script>
 import DynamicLink from "./DynamicComponent";
 import ChipTimeFromNow from "./ChipTimeFromNow";
+import CopyToClipboard from "./CopyToClipboard";
+
 import { from_python_time } from "../utils/utils";
 
 export default {
@@ -64,7 +72,7 @@ export default {
     grid_space: Number,
     resource: Object
   },
-  components: { DynamicLink, ChipTimeFromNow },
+  components: { DynamicLink, ChipTimeFromNow, CopyToClipboard },
   data: function() {
     return { active: 0, component_key: 0, current_timestamp: 0 };
   },
@@ -100,7 +108,7 @@ export default {
       try {
         return entry.plugin.timemachine[current_timestamp].timestamp;
       } catch {
-        console.log("*************");
+        console.log("Error getting timestamp from timemachine array");
         console.log(this.current_timestamp);
         console.log(entry);
       }

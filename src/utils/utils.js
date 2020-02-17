@@ -48,9 +48,14 @@ function timestamp_diff_from_now(ts) {
   return { days: days, hours: hours, minutes: minutes };
 }
 
+async function copy_content(elem) {
+  await navigator.clipboard.writeText(elem);
+}
+
 export {
   object_is_empty,
   make_unique_list,
   from_python_time,
-  timestamp_diff_from_now
+  timestamp_diff_from_now,
+  copy_content
 };
