@@ -1,7 +1,9 @@
 <template>
   <v-card>
-    <v-card-title class="headline">Differ</v-card-title>
-    <v-card-text>{{ text }}</v-card-text>
+    <v-card-text>
+      <v-btn small @click="get_diff()">get diff</v-btn>
+      <v-textarea :value="text" :rows="lines"></v-textarea>
+    </v-card-text>
     <v-spacer></v-spacer>
     <v-card-actions></v-card-actions>
   </v-card>
@@ -18,8 +20,17 @@ export default {
     };
   },
   props: ["plugin_name", "resource_id", "index"],
+  computed: {
+    lines: function() {
+      return this.text.split("\n").length;
+    }
+  },
   methods: {
     get_diff: function() {
+      if (this.index === 0) {
+        return;
+      }
+
       let url = "/api/get_plugin_result_diff";
       let params = {
         plugin_name: this.plugin_name,
@@ -27,13 +38,10 @@ export default {
         index: this.index
       };
 
-      api_call(url, params).then(resp => {
+      api_call({ url, params }).then(resp => {
         this.text = resp.data.diff;
       });
     }
-  },
-  mounted() {
-    this.get_diff();
   }
 };
 </script>

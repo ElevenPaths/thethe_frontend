@@ -42,20 +42,22 @@
                 ></v-slider>
                 <v-flex>
                   <chip-time-from-now :timestamp="entry.plugin.timestamp"></chip-time-from-now>
+                  <v-flex>
+                    <v-layout>
+                      <v-flex>
+                        <differ
+                          v-if="current_timestamp !== 0"
+                          :plugin_name="entry.plugin.name"
+                          :resource_id="resource._id"
+                          :index="current_timestamp"
+                        ></differ>
+                      </v-flex>
+                    </v-layout>
+                  </v-flex>
                 </v-flex>
               </v-flex>
               <v-flex v-else>
                 <chip-time-from-now :timestamp="entry.plugin.timestamp"></chip-time-from-now>
-              </v-flex>
-            </v-layout>
-            <v-layout>
-              <v-flex>
-                <differ
-                  v-if="current_timestamp !== 0"
-                  :plugin_name="entry.plugin.name"
-                  :resource_id="resource._id"
-                  :index="current_timestamp"
-                ></differ>
               </v-flex>
             </v-layout>
           </v-tab-item>
