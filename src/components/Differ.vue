@@ -29,10 +29,6 @@ export default {
   },
   methods: {
     get_diff: function() {
-      if (this.timestamp_index === 0) {
-        return;
-      }
-
       let url = "/api/get_plugin_result_diff";
       let params = {
         plugin_name: this.plugin_name,

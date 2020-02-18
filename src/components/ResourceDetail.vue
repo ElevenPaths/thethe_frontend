@@ -29,59 +29,12 @@
           <v-tab-item v-for="entry in sorted_plugin_list" :key="entry.index" lazy>
             <dynamic-link :type="entry.plugin.name" :data="entry.plugin" :key="component_key"></dynamic-link>
             <v-divider></v-divider>
-            <v-layout v-if="entry.plugin.timestamp" align-center justify-start fill-height>
-              <v-flex mx-4 v-if="entry.plugin.timemachine.length > 1">
-                <v-layout>
-                  <v-slider
-                    v-model="current_timestamp"
-                    :tick-labels="tick_labels(entry.plugin.timemachine)"
-                    :max="entry.plugin.timemachine.length - 1"
-                    ticks
-                    track-color="primary"
-                    class="caption"
-                    thumb-label="always"
-                  ></v-slider>
-                </v-layout>
-
-                <v-layout align-center>
-                  <v-flex xs2>
-                    <v-switch v-model="toggle_differ" label="diff"></v-switch>
-                  </v-flex>
-                  <v-flex xs8>
-                    <v-btn
-                      v-if="current_timestamp > 0"
-                      flat
-                      icon
-                      color="primary"
-                      @click.stop="to_past()"
-                    >
-                      <v-icon>mdi-arrow-left</v-icon>
-                    </v-btn>
-                    <chip-time-from-now :timestamp="entry.plugin.timestamp"></chip-time-from-now>
-                    <v-btn
-                      v-if="current_timestamp < (entry.plugin.timemachine.length - 1)"
-                      flat
-                      icon
-                      color="primary"
-                      @click.stop="to_future()"
-                    >
-                      <v-icon>mdi-arrow-right</v-icon>
-                    </v-btn>
-                  </v-flex>
-                </v-layout>
-
-                <v-flex v-if="toggle_differ && current_timestamp !== 0" xs12>
-                  <differ
-                    :plugin_name="entry.plugin.name"
-                    :resource_id="resource._id"
-                    :timestamp_index="current_timestamp"
-                  ></differ>
-                </v-flex>
-              </v-flex>
-              <v-flex v-else>
-                <chip-time-from-now :timestamp="entry.plugin.timestamp"></chip-time-from-now>
-              </v-flex>
-            </v-layout>
+            <time-machine
+              :resource="resource._id"
+              :timemachine="entry.plugin.timemachine"
+              :plugin="entry.plugin.name"
+              :timestamp="entry.plugin.timestamp"
+            ></time-machine>
           </v-tab-item>
         </v-tabs-items>
       </v-tabs>
@@ -95,11 +48,8 @@
 
 <script>
 import DynamicLink from "./DynamicComponent";
-import ChipTimeFromNow from "./ChipTimeFromNow";
 import CopyToClipboard from "./CopyToClipboard";
-import Differ from "./Differ";
-
-import { from_python_time } from "../utils/utils";
+import TimeMachine from "./TimeMachine";
 
 export default {
   name: "resource-detail",
@@ -107,13 +57,11 @@ export default {
     grid_space: Number,
     resource: Object
   },
-  components: { DynamicLink, ChipTimeFromNow, CopyToClipboard, Differ },
+  components: { DynamicLink, CopyToClipboard, TimeMachine },
   data: function() {
     return {
       active: 0,
-      component_key: 0,
-      current_timestamp: 0,
-      toggle_differ: false
+      component_key: 0
     };
   },
   computed: {
@@ -137,29 +85,6 @@ export default {
       return plugin_list;
     }
   },
-  methods: {
-    from_python_time: from_python_time,
-
-    tick_labels: function(timemachine) {
-      return Array.from(timemachine, elem => from_python_time(elem.timestamp));
-    },
-
-    get_timestamp: function() {
-      try {
-        return entry.plugin.timemachine[current_timestamp].timestamp;
-      } catch {
-        console.log(this.current_timestamp);
-      }
-    },
-
-    to_future: function() {
-      this.current_timestamp += 1;
-    },
-
-    to_past: function() {
-      this.current_timestamp -= 1;
-    }
-  },
   watch: {
     resource: {
       //HACK: Again, to reload dynamic component when new data arrives
@@ -167,22 +92,6 @@ export default {
       deep: true,
       handler: function() {
         this.component_key += 1;
-      }
-    },
-    current_timestamp: {
-      handler: function() {
-        let params = {
-          resource_id: this.resource._id,
-          plugin_name: this.sorted_plugin_list[this.active].plugin.name,
-          timestamp_index: this.current_timestamp
-        };
-        this.$store.dispatch("lazy_plugin_results", params);
-      }
-    },
-    active: {
-      // Reset timemachine index upon plugin (tab) selection
-      handler: function() {
-        this.current_timestamp = 0;
       }
     }
   }
