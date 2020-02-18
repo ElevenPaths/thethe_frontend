@@ -29,7 +29,7 @@
           <v-tab-item v-for="entry in sorted_plugin_list" :key="entry.index" lazy>
             <dynamic-link :type="entry.plugin.name" :data="entry.plugin" :key="component_key"></dynamic-link>
             <v-divider></v-divider>
-            <v-layout v-if="entry.plugin.timestamp" align-center justify-start row fill-height wrap>
+            <v-layout v-if="entry.plugin.timestamp" align-center justify-start fill-height>
               <v-flex mx-4 v-if="entry.plugin.timemachine.length > 1">
                 <v-slider
                   v-model="current_timestamp"
@@ -40,20 +40,22 @@
                   class="caption"
                   thumb-label="always"
                 ></v-slider>
-                <v-flex>
-                  <chip-time-from-now :timestamp="entry.plugin.timestamp"></chip-time-from-now>
-                  <v-flex>
-                    <v-layout>
-                      <v-flex>
-                        <differ
-                          v-if="current_timestamp !== 0"
-                          :plugin_name="entry.plugin.name"
-                          :resource_id="resource._id"
-                          :index="current_timestamp"
-                        ></differ>
-                      </v-flex>
-                    </v-layout>
+
+                <v-layout>
+                  <v-flex xs2>
+                    <v-switch v-model="toggle_differ" label="diff"></v-switch>
                   </v-flex>
+                  <v-flex xs8>
+                    <chip-time-from-now :timestamp="entry.plugin.timestamp"></chip-time-from-now>
+                  </v-flex>
+                </v-layout>
+
+                <v-flex v-if="toggle_differ && current_timestamp !== 0" xs12>
+                  <differ
+                    :plugin_name="entry.plugin.name"
+                    :resource_id="resource._id"
+                    :index="current_timestamp"
+                  ></differ>
                 </v-flex>
               </v-flex>
               <v-flex v-else>
@@ -87,7 +89,12 @@ export default {
   },
   components: { DynamicLink, ChipTimeFromNow, CopyToClipboard, Differ },
   data: function() {
-    return { active: 0, component_key: 0, current_timestamp: 0 };
+    return {
+      active: 0,
+      component_key: 0,
+      current_timestamp: 0,
+      toggle_differ: false
+    };
   },
   computed: {
     sorted_plugin_list: function() {
@@ -108,6 +115,10 @@ export default {
         plugin_list.push({ index: i, plugin: plugin });
       }
       return plugin_list;
+    },
+
+    activate_differ: function() {
+      return this.toggle_differ;
     }
   },
   methods: {
@@ -125,6 +136,10 @@ export default {
         console.log(this.current_timestamp);
         console.log(entry);
       }
+    },
+
+    get_diff: function() {
+      this.toggle_differ = !this.toggle_differ;
     }
   },
   watch: {
@@ -144,6 +159,11 @@ export default {
           timestamp_index: this.current_timestamp
         };
         this.$store.dispatch("lazy_plugin_results", params);
+      }
+    },
+    active: {
+      handler: function() {
+        this.current_timestamp = 0;
       }
     }
   }

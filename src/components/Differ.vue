@@ -1,12 +1,14 @@
 <template>
-  <v-card>
-    <v-card-text>
-      <v-btn small @click="get_diff()">get diff</v-btn>
-      <v-textarea :value="text" :rows="lines"></v-textarea>
-    </v-card-text>
-    <v-spacer></v-spacer>
-    <v-card-actions></v-card-actions>
-  </v-card>
+  <v-content>
+    <v-layout>
+      <v-spacer xs11></v-spacer>
+    </v-layout>
+    <v-layout column>
+      <v-flex>
+        <v-textarea :value="text" :rows="lines" no-resize hide-details readonly></v-textarea>
+      </v-flex>
+    </v-layout>
+  </v-content>
 </template>
 
 <script>
@@ -42,6 +44,9 @@ export default {
         this.text = resp.data.diff;
       });
     }
+  },
+  mounted: function() {
+    this.get_diff();
   }
 };
 </script>
