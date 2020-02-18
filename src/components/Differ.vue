@@ -21,7 +21,7 @@ export default {
       text: ""
     };
   },
-  props: ["plugin_name", "resource_id", "index"],
+  props: ["plugin_name", "resource_id", "timestamp_index"],
   computed: {
     lines: function() {
       return this.text.split("\n").length;
@@ -29,7 +29,7 @@ export default {
   },
   methods: {
     get_diff: function() {
-      if (this.index === 0) {
+      if (this.timestamp_index === 0) {
         return;
       }
 
@@ -37,7 +37,7 @@ export default {
       let params = {
         plugin_name: this.plugin_name,
         resource_id: this.resource_id,
-        index: this.index
+        index: this.timestamp_index
       };
 
       api_call({ url, params }).then(resp => {
@@ -47,6 +47,13 @@ export default {
   },
   mounted: function() {
     this.get_diff();
+  },
+  watch: {
+    timestamp_index: {
+      handler: function() {
+        this.get_diff();
+      }
+    }
   }
 };
 </script>

@@ -31,22 +31,42 @@
             <v-divider></v-divider>
             <v-layout v-if="entry.plugin.timestamp" align-center justify-start fill-height>
               <v-flex mx-4 v-if="entry.plugin.timemachine.length > 1">
-                <v-slider
-                  v-model="current_timestamp"
-                  :tick-labels="tick_labels(entry.plugin.timemachine)"
-                  :max="entry.plugin.timemachine.length - 1"
-                  ticks
-                  track-color="primary"
-                  class="caption"
-                  thumb-label="always"
-                ></v-slider>
-
                 <v-layout>
+                  <v-slider
+                    v-model="current_timestamp"
+                    :tick-labels="tick_labels(entry.plugin.timemachine)"
+                    :max="entry.plugin.timemachine.length - 1"
+                    ticks
+                    track-color="primary"
+                    class="caption"
+                    thumb-label="always"
+                  ></v-slider>
+                </v-layout>
+
+                <v-layout align-center>
                   <v-flex xs2>
                     <v-switch v-model="toggle_differ" label="diff"></v-switch>
                   </v-flex>
                   <v-flex xs8>
+                    <v-btn
+                      v-if="current_timestamp > 0"
+                      flat
+                      icon
+                      color="primary"
+                      @click.stop="to_past()"
+                    >
+                      <v-icon>mdi-arrow-left</v-icon>
+                    </v-btn>
                     <chip-time-from-now :timestamp="entry.plugin.timestamp"></chip-time-from-now>
+                    <v-btn
+                      v-if="current_timestamp < (entry.plugin.timemachine.length - 1)"
+                      flat
+                      icon
+                      color="primary"
+                      @click.stop="to_future()"
+                    >
+                      <v-icon>mdi-arrow-right</v-icon>
+                    </v-btn>
                   </v-flex>
                 </v-layout>
 
@@ -54,7 +74,7 @@
                   <differ
                     :plugin_name="entry.plugin.name"
                     :resource_id="resource._id"
-                    :index="current_timestamp"
+                    :timestamp_index="current_timestamp"
                   ></differ>
                 </v-flex>
               </v-flex>
@@ -115,10 +135,6 @@ export default {
         plugin_list.push({ index: i, plugin: plugin });
       }
       return plugin_list;
-    },
-
-    activate_differ: function() {
-      return this.toggle_differ;
     }
   },
   methods: {
@@ -132,14 +148,16 @@ export default {
       try {
         return entry.plugin.timemachine[current_timestamp].timestamp;
       } catch {
-        console.log("Error getting timestamp from timemachine array");
         console.log(this.current_timestamp);
-        console.log(entry);
       }
     },
 
-    get_diff: function() {
-      this.toggle_differ = !this.toggle_differ;
+    to_future: function() {
+      this.current_timestamp += 1;
+    },
+
+    to_past: function() {
+      this.current_timestamp -= 1;
     }
   },
   watch: {
@@ -162,6 +180,7 @@ export default {
       }
     },
     active: {
+      // Reset timemachine index upon plugin (tab) selection
       handler: function() {
         this.current_timestamp = 0;
       }
