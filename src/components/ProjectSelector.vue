@@ -35,28 +35,66 @@
           :show="delete_dialog"
         ></delete-dialog>
       </v-card>
-      <v-flex v-if="!user_is_creating_project">
-        <v-btn
-          class="font-weight-bold"
-          small
-          color="success"
-          @click="user_is_creating_project = !user_is_creating_project"
-        >New</v-btn>
-        <v-btn
-          class="font-weight-bold"
-          :disabled="!is_project_selected"
-          small
-          color="primary"
-          @click="open_project"
-        >Open</v-btn>
-        <v-btn
-          class="font-weight-bold"
-          :disabled="!is_project_selected"
-          small
-          color="error"
-          @click="delete_dialog = true"
-        >Delete</v-btn>
-      </v-flex>
+
+      <v-layout v-if="!user_is_creating_project">
+        <v-spacer></v-spacer>
+        <v-flex>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn
+                v-on="on"
+                class="font-weight-bold"
+                small
+                fab
+                color="green"
+                @click="user_is_creating_project = !user_is_creating_project"
+              >
+                <v-icon color="white">add</v-icon>
+              </v-btn>
+            </template>
+            <span>Add a new project</span>
+          </v-tooltip>
+        </v-flex>
+
+        <v-flex>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn
+                v-on="on"
+                class="font-weight-bold"
+                :disabled="!is_project_selected"
+                small
+                fab
+                color="primary"
+                @click="open_project"
+              >
+                <v-icon color="white">done</v-icon>
+              </v-btn>
+            </template>
+            <span>Open selected project</span>
+          </v-tooltip>
+        </v-flex>
+        <v-flex>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn
+                v-on="on"
+                class="font-weight-bold"
+                :disabled="!is_project_selected"
+                small
+                fab
+                color="red"
+                @click="delete_dialog = true"
+              >
+                <v-icon color="white">clear</v-icon>
+              </v-btn>
+            </template>
+            <span>Delete this project</span>
+          </v-tooltip>
+        </v-flex>
+        <v-spacer></v-spacer>
+      </v-layout>
+
       <v-flex v-else>
         <v-form ref="new_project_form">
           <v-container>
@@ -68,13 +106,37 @@
                 v-model.trim="new_project_name"
               ></v-text-field>
               <v-flex>
-                <v-btn class="font-weight-bold" small color="success" @click="create_project">Add</v-btn>
-                <v-btn
-                  class="font-weight-bold"
-                  small
-                  color="warning"
-                  @click="user_is_creating_project = !user_is_creating_project"
-                >Cancel</v-btn>
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn
+                      v-on="on"
+                      class="font-weight-bold"
+                      small
+                      fab
+                      color="green"
+                      @click="create_project"
+                    >
+                      <v-icon color="white">add</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Save new project</span>
+                </v-tooltip>
+
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn
+                      v-on="on"
+                      class="font-weight-bold"
+                      small
+                      fab
+                      color="orange"
+                      @click="user_is_creating_project = !user_is_creating_project"
+                    >
+                      <v-icon color="white">cancel</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Cancel project creation</span>
+                </v-tooltip>
               </v-flex>
             </v-layout>
           </v-container>

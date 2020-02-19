@@ -1,6 +1,6 @@
 <template>
   <v-layout class="pa-1">
-    <v-flex :class="{ [`lg${grid_space}`]: true }" v-if="there_are_resources_in_list || search">
+    <v-flex :class="{ [`lg${grid_space}`]: true }" v-if="there_are_resources_in_list || filter">
       <v-card
         v-on:dismiss="remove_resource = !remove_resource"
         v-on:dodelete="remove_resource_with_confirmation"
@@ -70,7 +70,7 @@
           <v-layout align-center>
             <v-flex>
               <v-text-field
-                v-model="search"
+                v-model="filter"
                 prepend-icon="mdi-filter-outline"
                 label="Filter"
                 single-line
@@ -185,7 +185,7 @@ export default {
     return {
       selected_resource: {},
       remove_resource: false,
-      search: "",
+      filter: "",
       component_key: 0,
       resource_count: 0,
       open_tags: false
@@ -198,15 +198,15 @@ export default {
 
       resources = resources.sort(this.sortcriteria);
 
-      if (!this.search) {
+      if (!this.filter) {
         return resources;
       } else {
         return resources.filter(resource => {
-          // So users are able to search by a complete hash
+          // So users are able to filter by a complete hash
           if (resource.resource_type === "hash") {
-            return resource.hash.includes(this.search);
+            return resource.hash.includes(this.filter);
           } else {
-            return resource.canonical_name.includes(this.search);
+            return resource.canonical_name.includes(this.filter);
           }
         });
       }
@@ -253,7 +253,7 @@ export default {
     },
 
     filter_by_name: function(resource, token) {
-      return resource.name.search(token) === -1 ? false : true;
+      return resource.name.filter(token) === -1 ? false : true;
     },
 
     remove_resource_with_confirmation: function() {
@@ -272,7 +272,7 @@ export default {
 
     tag_shake: function() {
       let payload = {
-        resource_id: this.selected_resource._id
+        _id: this.selected_resource._id
       };
       this.$store.dispatch("update_resource", payload);
     },
