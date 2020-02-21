@@ -1,6 +1,6 @@
 <template>
   <v-layout class="pa-1">
-    <v-flex :class="{ [`lg${grid_space}`]: true }" v-if="there_are_resources_in_list || filter">
+    <v-flex :class="{ [`lg${grid_space}`]: true }" v-if="list_not_empty || filter">
       <v-card
         v-on:dismiss="remove_resource = !remove_resource"
         v-on:dodelete="remove_resource_with_confirmation"
@@ -11,7 +11,7 @@
           </v-card-text>
         </v-card-title>
         <v-divider></v-divider>
-        <v-card-actions v-if="a_resource_is_selected">
+        <v-card-actions v-if="is_resource_selected">
           <v-flex px-2>
             <v-layout align-center justify-center row>
               <v-flex>
@@ -66,7 +66,7 @@
             </v-layout>
           </v-flex>
         </v-card-actions>
-        <v-card-title class="pa-1 ma-0" v-if="!a_resource_is_selected">
+        <v-card-title class="pa-1 ma-0" v-if="!is_resource_selected">
           <v-layout align-center>
             <v-flex>
               <v-text-field
@@ -116,9 +116,9 @@
           </v-list>
         </v-flex>
         <v-flex>
-          <v-flex v-if="a_resource_is_selected">
+          <v-flex v-if="is_resource_selected">
             <v-divider></v-divider>
-            <tags :resource="selected_resource" :show_tags="open_tags" @shake="tag_shake"></tags>
+            <tags :resource="selected_resource" :show_tags="open_tags"></tags>
           </v-flex>
         </v-flex>
         <delete-dialog
@@ -128,7 +128,7 @@
         ></delete-dialog>
       </v-card>
     </v-flex>
-    <v-flex v-if="!there_are_resources_in_list">
+    <v-flex v-if="!list_not_empty">
       <v-container bg fill-height grid-list-md text-xs-center>
         <v-layout justify-center align-center row wrap>
           <v-flex pt-5>
@@ -140,13 +140,11 @@
       </v-container>
     </v-flex>
     <resource-detail
-      v-if="a_resource_is_selected"
+      v-if="is_resource_selected"
       :resource="selected_resource"
       :grid_space="grid_space"
       :key="component_key"
     ></resource-detail>
-    <v-flex v-if="!a_resource_is_selected && resource_list.length > 0">
-      <v-flex>{{ selected_resource.tags }}</v-flex>
     </v-flex>
   </v-layout>
 </template>
@@ -212,11 +210,11 @@ export default {
       }
     },
 
-    there_are_resources_in_list: function() {
+    list_not_empty: function() {
       return this.resource_list.length === 0 ? false : true;
     },
 
-    a_resource_is_selected: function() {
+    is_resource_selected: function() {
       return !object_is_empty(this.selected_resource);
     }
   },
@@ -268,13 +266,6 @@ export default {
 
     toggle_tags: function() {
       this.open_tags = !this.open_tags;
-    },
-
-    tag_shake: function() {
-      let payload = {
-        _id: this.selected_resource._id
-      };
-      this.$store.dispatch("update_resource", payload);
     },
 
     //HACK: This is a hack to re-render component details in other to maintain plugin tabs integrity

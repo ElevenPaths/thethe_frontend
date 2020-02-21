@@ -12,6 +12,40 @@ const state = {
 };
 
 const actions = {
+  add_tag: async function({ commit }, params) {
+    let url = "/api/add_tag";
+
+    await api_call({ url: url, params }).then(resp => {
+      let type = "error";
+      if (resp.data.done) {
+        type = "success";
+        commit("add_tag", params);
+      }
+      Vue.notify({
+        type: type,
+        title: `<b>Tags</b>`,
+        text: `${resp.data.message}`
+      });
+    });
+  },
+
+  remove_tag: async function({ commit }, params) {
+    let url = "/api/remove_tag";
+
+    await api_call({ url: url, params }).then(resp => {
+      let type = "error";
+      if (resp.data.done) {
+        type = "success";
+        commit("remove_tag", params);
+      }
+      Vue.notify({
+        type: type,
+        title: `<b>Tags</b>`,
+        text: `${resp.data.message}`
+      });
+    });
+  },
+
   lazy_plugin_results: async function({ commit }, params) {
     let url = "/api/get_lazy_plugin_results";
 
@@ -32,6 +66,7 @@ const actions = {
         commit("loading_resources", false);
       });
   },
+
   get_resources: async function({ commit, getters }) {
     let url = "/api/get_resources";
     let project_id = getters.get_opened_project._id;
@@ -107,9 +142,20 @@ const actions = {
 };
 
 const mutations = {
+  add_tag: function(commit, params) {
+    let resource = state.resources.find(elem => elem._id == params.resource_id);
+    resource.tags.push(params.tag);
+  },
+
+  remove_tag: function(commit, params) {
+    let resource = state.resources.find(elem => elem._id == params.resource_id);
+    resource.tags = resource.tags.filter(elem => elem.name != params.tag.name);
+  },
+
   loading_resources: function(commit, is_loading) {
     state.loading_resources = is_loading;
   },
+
   set_resources: function(commit, resources) {
     resources.forEach(resource => {
       if (state.resources.some(el => el._id === resource._id)) {
@@ -196,6 +242,9 @@ const getters = {
   },
   is_loading: state => {
     return state.loading_resources;
+  },
+  get_resource: state => id => {
+    return state.resources.filter(elem => elem._id === id);
   }
 };
 

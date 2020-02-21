@@ -3,15 +3,22 @@
     <v-flex v-if="resource.tags && resource.tags.length > 0">
       <v-flex>
         <v-btn
-          v-for="tag in resource.tags"
+          v-for="tag in sorted_tags"
           :key="tag.name"
           class="font-weight-bold text-lowercase"
           :color="tag.color"
           small
           round
         >
-          {{ tag.name }}
-          <v-icon @click.stop="tag_to_resource(tag)" right>mdi-close-circle</v-icon>
+          <v-layout align-center>
+            <v-flex>{{ tag.name }}</v-flex>
+            <v-flex v-if="tag.icon">
+              <v-icon>{{ tag.icon }}</v-icon>
+            </v-flex>
+            <v-flex v-if="show_tags">
+              <v-icon @click.stop="remove_tag(tag)" right>mdi-close-circle</v-icon>
+            </v-flex>
+          </v-layout>
         </v-btn>
       </v-flex>
     </v-flex>
@@ -28,7 +35,7 @@
             class="font-weight-bold text-lowercase"
             small
             round
-            @click="tag_to_resource(tag)"
+            @click="add_tag(tag)"
           >{{ tag.name }}</v-btn>
         </v-flex>
       </v-flex>
@@ -93,6 +100,7 @@ export default {
     },
     show_tags: { type: Boolean, default: false }
   },
+
   data() {
     return {
       tags: [],
@@ -106,24 +114,47 @@ export default {
   computed: {
     available_tags: function() {
       if (this.resource.tags === undefined) {
-        return this.tags;
+        return this.tags.sort(function(a, b) {
+          return a.name.localeCompare(b.name);
+        });
       }
 
-      return this.tags.filter(
-        that_tag =>
-          !this.resource.tags.some(elem => elem.name === that_tag.name)
-      );
+      return this.tags
+        .filter(
+          that_tag =>
+            !this.resource.tags.some(elem => elem.name === that_tag.name)
+        )
+        .sort(function(a, b) {
+          return a.name.localeCompare(b.name);
+        });
+    },
+    sorted_tags: function() {
+      return this.resource.tags.sort(function(a, b) {
+        return a.name.localeCompare(b.name);
+      });
     }
   },
+
   methods: {
-    new_tag() {
+    async new_tag() {
       this.tag_dialog = !this.tag_dialog;
       let tag = { name: this.new_tag_name, color: this.new_tag_color };
       let payload = {
         url: "/api/add_new_tag",
         tag: tag
       };
-      api_call(payload);
+
+      await api_call(payload).then(resp => {
+        let type = "error";
+        if (resp.data.done) {
+          type = "success";
+        }
+        this.$notify({
+          type: type,
+          title: `<b>Tags</b>`,
+          text: `${resp.data.message}`
+        });
+      });
 
       this.new_tag_color = "blue";
       this.$refs.tag_name_field.reset();
@@ -142,18 +173,25 @@ export default {
       api_call(payload).then(resp => (this.tag_colors = resp.data.tag_colors));
     },
 
-    tag_to_resource(tag) {
+    add_tag: function(tag) {
       let payload = {
-        url: "/api/tag_to_resource",
         resource_id: this.resource._id,
-        resource_type: this.resource.resource_type,
         tag: tag
       };
-      api_call(payload).then(resp => {
-        this.$emit("shake");
-      });
+
+      this.$store.dispatch("add_tag", payload);
+    },
+
+    remove_tag: function(tag) {
+      let payload = {
+        resource_id: this.resource._id,
+        tag: tag
+      };
+
+      this.$store.dispatch("remove_tag", payload);
     }
   },
+
   mounted: function() {
     this.load_tags();
   }
