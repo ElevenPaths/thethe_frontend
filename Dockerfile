@@ -9,12 +9,7 @@ RUN npm run build
 # Producción
 FROM nginx:1.17.4-alpine as production-stage
 
-RUN apk update \
-    && apk add openssl
-
-COPY ./generate_certs.sh /temp/
-RUN chmod +x /temp/generate_certs.sh
-RUN /bin/sh /temp/generate_certs.sh
+RUN apk update
 
 RUN rm /etc/nginx/conf.d/default.conf
 COPY ./default.conf /etc/nginx/conf.d
