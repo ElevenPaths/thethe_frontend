@@ -4,6 +4,7 @@ import Router from "vue-router";
 const routerOptions = [
   { path: "/", component: "Root" },
   { path: "/login", component: "Login" },
+  { path: "/wait", component: "Wait" },
   { path: "*", component: "Root" }
 ];
 

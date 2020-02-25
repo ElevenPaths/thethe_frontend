@@ -27,7 +27,7 @@ axios.interceptors.response.use(
       //TODO: Should return a Promise with a message to let know user server is down.
       store.dispatch(RESET_PROJECT);
       console.log("Server appears to be down");
-      router.push("/");
+      router.push("/wait");
     }
 
     if (error.response) {
