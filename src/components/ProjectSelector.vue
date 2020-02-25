@@ -150,6 +150,8 @@
 import api_call from "../utils/api";
 import { object_is_empty } from "../utils/utils";
 import { SET_PROJECT } from "../store/actions/project";
+import { RESET_PROJECT } from "../store/actions/project";
+import { AUTH_LOGOUT } from "../store/actions/auth";
 
 import {
   required,
@@ -200,7 +202,9 @@ export default {
           }
         })
         .catch(err => {
-          console.log(err);
+          if (err.data.status === 401) {
+            this.logout();
+          }
         });
     },
 
@@ -251,7 +255,9 @@ export default {
           });
         })
         .catch(err => {
-          console.log(err);
+          if (err.data.status === 401) {
+            this.logout();
+          }
         });
     },
 
@@ -287,6 +293,16 @@ export default {
             });
           });
       }
+    },
+    logout: function() {
+      this.$store
+        .dispatch(AUTH_LOGOUT)
+        .then(() => {
+          this.$store.dispatch(RESET_PROJECT);
+        })
+        .then(() => {
+          this.$router.push("/login");
+        });
     }
   },
   computed: {

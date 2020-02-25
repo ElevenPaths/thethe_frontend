@@ -69,6 +69,7 @@ const mutations = {
   [AUTH_LOGOUT]: state => {
     state.token = "";
     state.username = "";
+    localStorage.clear();
   }
 };
 

@@ -7,6 +7,7 @@ if (process.env.NODE_ENV === "development") {
 }
 
 import { AUTH_LOGOUT } from "../store/actions/auth";
+import { RESET_PROJECT } from "../store/actions/project";
 import router from "../router";
 import store from "../store";
 
@@ -21,11 +22,18 @@ axios.interceptors.response.use(
     return response;
   },
   function(error) {
+    // Deal with server offline
+    if (!error.status) {
+      //TODO: Should return a Promise with a message to let know user server is down.
+      store.dispatch(RESET_PROJECT);
+      console.log("Server appears to be down");
+      router.push("/");
+    }
+
     if (error.response) {
-      //store.dispatch(AUTH_LOGOUT);
-      //router.push("/login");
       switch (error.response.status) {
         case 401:
+          console.log("Insecure request. Logging out.");
           store.dispatch(AUTH_LOGOUT);
           router.push("/login");
           break;
