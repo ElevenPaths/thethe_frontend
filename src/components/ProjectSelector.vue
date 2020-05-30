@@ -36,7 +36,98 @@
         ></delete-dialog>
       </v-card>
 
-      <v-layout v-if="!user_is_creating_project">
+      <v-flex v-if="user_is_creating_project">
+        <v-form ref="new_project_form">
+          <v-container>
+            <v-layout row wrap>
+              <v-text-field
+                label="project name"
+                required
+                class="pt-0"
+                v-model.trim="new_project_name"
+              ></v-text-field>
+              <v-flex>
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn
+                      v-on="on"
+                      class="font-weight-bold"
+                      small
+                      fab
+                      color="green"
+                      @click="create_project"
+                    >
+                      <v-icon color="white">add</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Save new project</span>
+                </v-tooltip>
+
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn
+                      v-on="on"
+                      class="font-weight-bold"
+                      small
+                      fab
+                      color="orange"
+                      @click="reset();user_is_creating_project = !user_is_creating_project"
+                    >
+                      <v-icon color="white">cancel</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Cancel project creation</span>
+                </v-tooltip>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-form>
+      </v-flex>
+
+      <v-flex v-else-if="user_is_renaming_project">
+        <v-form ref="rename_project_form">
+          <v-container>
+            <v-layout row wrap>
+              <v-text-field label="new name" required class="pt-0" v-model.trim="new_project_name"></v-text-field>
+              <v-flex>
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn
+                      v-on="on"
+                      class="font-weight-bold"
+                      small
+                      fab
+                      color="info"
+                      @click="rename_project"
+                    >
+                      <v-icon color="white">done</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Rename project</span>
+                </v-tooltip>
+
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn
+                      v-on="on"
+                      class="font-weight-bold"
+                      small
+                      fab
+                      color="orange"
+                      @click="reset();user_is_renaming_project = !user_is_renaming_project"
+                    >
+                      <v-icon color="white">cancel</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Cancel rename</span>
+                </v-tooltip>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-form>
+      </v-flex>
+
+      <v-layout v-else>
         <v-spacer></v-spacer>
         <v-flex>
           <v-tooltip bottom>
@@ -74,6 +165,26 @@
             <span>Open selected project</span>
           </v-tooltip>
         </v-flex>
+
+        <v-flex>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn
+                v-on="on"
+                class="font-weight-bold"
+                :disabled="!is_project_selected"
+                small
+                fab
+                color="warning"
+                @click="user_is_renaming_project = !user_is_renaming_project"
+              >
+                <v-icon color="white">more_horiz</v-icon>
+              </v-btn>
+            </template>
+            <span>Rename selected project</span>
+          </v-tooltip>
+        </v-flex>
+
         <v-flex>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
@@ -94,54 +205,6 @@
         </v-flex>
         <v-spacer></v-spacer>
       </v-layout>
-
-      <v-flex v-else>
-        <v-form ref="new_project_form">
-          <v-container>
-            <v-layout row wrap>
-              <v-text-field
-                label="project name"
-                required
-                class="pt-0"
-                v-model.trim="new_project_name"
-              ></v-text-field>
-              <v-flex>
-                <v-tooltip bottom>
-                  <template v-slot:activator="{ on }">
-                    <v-btn
-                      v-on="on"
-                      class="font-weight-bold"
-                      small
-                      fab
-                      color="green"
-                      @click="create_project"
-                    >
-                      <v-icon color="white">add</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Save new project</span>
-                </v-tooltip>
-
-                <v-tooltip bottom>
-                  <template v-slot:activator="{ on }">
-                    <v-btn
-                      v-on="on"
-                      class="font-weight-bold"
-                      small
-                      fab
-                      color="orange"
-                      @click="user_is_creating_project = !user_is_creating_project"
-                    >
-                      <v-icon color="white">cancel</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Cancel project creation</span>
-                </v-tooltip>
-              </v-flex>
-            </v-layout>
-          </v-container>
-        </v-form>
-      </v-flex>
     </v-flex>
   </v-layout>
 </template>
@@ -177,12 +240,41 @@ export default {
       projects: [],
       selected_project: {},
       user_is_creating_project: false,
+      user_is_renaming_project: false,
       new_project_name: "",
       delete_dialog: false,
       active_project: ""
     };
   },
   methods: {
+    reset: function() {
+      this.new_project_name = "";
+    },
+    rename_project: function() {
+      api_call({
+        url: "/api/rename_project",
+        new_name: this.new_project_name,
+        id: this.selected_project._id
+      })
+        .then(resp => {
+          this.$notify({
+            title: "Info",
+            text: resp.data.success_message
+          });
+          this.get_projects();
+        })
+        .catch(err => {
+          this.$notify({
+            title: "Error",
+            text: err.data.error_message,
+            type: "error"
+          });
+        })
+        .finally(_ => {
+          this.reset();
+          this.user_is_renaming_project = false;
+        });
+    },
     open_project: function() {
       // Check if a project is open
       // Set selected_project in Vuex
@@ -216,7 +308,7 @@ export default {
       }).catch(err => {
         this.$notify({
           title: "Error",
-          text: err.response.data.error_message,
+          text: err.data.error_message,
           type: "error"
         });
       });
@@ -235,7 +327,7 @@ export default {
         .catch(err => {
           this.$notify({
             title: "Error",
-            text: err.response.data.error_message,
+            text: err.data.error_message,
             type: "error"
           });
         })
@@ -288,7 +380,7 @@ export default {
           .catch(err => {
             this.$notify({
               title: "Error",
-              text: err.response.data.error_message,
+              text: err.data.error_message,
               type: "error"
             });
           });

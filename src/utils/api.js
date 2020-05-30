@@ -22,6 +22,19 @@ axios.interceptors.response.use(
     return response;
   },
   function(error) {
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          console.log("Insecure request. Logging out.");
+          store.dispatch(AUTH_LOGOUT);
+          router.push("/login");
+          break;
+
+        case 400:
+          return Promise.reject(error.response);
+      }
+    }
+
     // Deal with server offline
     if (!error.status) {
       //TODO: Should return a Promise with a message to let know user server is down.
@@ -30,15 +43,6 @@ axios.interceptors.response.use(
       router.push("/wait");
     }
 
-    if (error.response) {
-      switch (error.response.status) {
-        case 401:
-          console.log("Insecure request. Logging out.");
-          store.dispatch(AUTH_LOGOUT);
-          router.push("/login");
-          break;
-      }
-    }
     return Promise.reject(error.response);
   }
 );

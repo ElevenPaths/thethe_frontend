@@ -23,7 +23,7 @@ export default {
     };
   },
   mounted: function() {
-    const delay = 5000;
+    const delay = 10000;
     this.timer = setTimeout(() => {
       this.$router.push("/");
     }, delay);
