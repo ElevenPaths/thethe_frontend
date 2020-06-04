@@ -25,10 +25,12 @@ axios.interceptors.response.use(
     if (error.response) {
       switch (error.response.status) {
         case 401:
-          console.log("Insecure request. Logging out.");
           store.dispatch(AUTH_LOGOUT);
-          router.push("/login");
-          break;
+          if (router.history.current.fullPath !== "/login")
+            router.push("/login").catch((err) => {
+              console.log(err);
+            });
+          return Promise.reject(error.response);
 
         case 400:
           return Promise.reject(error.response);

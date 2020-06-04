@@ -10,7 +10,7 @@
               </v-spacer>
             </v-toolbar>
             <v-card-text>
-              <v-form class="login" @submit.prevent="login" id="login-form">
+              <v-form class="login" @submit.prevent="login" ref="login_form" id="login_form">
                 <v-text-field
                   label="Login"
                   name="login"
@@ -31,7 +31,7 @@
             </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn type="submit" color="primary" form="login-form">Login</v-btn>
+              <v-btn type="submit" color="primary" form="login_form">Login</v-btn>
             </v-card-actions>
             <template v-if="auth_status === 'error'">
               <v-alert
@@ -73,7 +73,7 @@ export default {
         .then(() => {
           this.$router.push("/");
         })
-        .catch(err => console.log(err.data.error_message));
+        .catch(err => this.$refs.login_form.reset());
     }
   },
   computed: {
@@ -82,7 +82,9 @@ export default {
 
   beforeMount: function() {
     if (this.$store.getters["is_authenticated"]) {
-      this.$router.push("/");
+      if (this.$route.name !== "login") {
+        this.$router.push("/login");
+      }
     }
   }
 };

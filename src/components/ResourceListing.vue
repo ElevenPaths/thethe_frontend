@@ -145,7 +145,6 @@
       :grid_space="grid_space"
       :key="component_key"
     ></resource-detail>
-    </v-flex>
   </v-layout>
 </template>
 
@@ -156,6 +155,7 @@ import PluginSelector from "./PluginSelector";
 import Tags from "./Tags";
 
 import { object_is_empty } from "../utils/utils";
+import { mapActions } from "vuex";
 
 export default {
   // 'data' must be a function if we don't want to share state between instantiation of the same components
@@ -219,6 +219,8 @@ export default {
     }
   },
   methods: {
+    ...mapActions(["lazy_get_full_resource"]),
+
     copy_resource_to_json: async function() {
       await navigator.clipboard.writeText(
         JSON.stringify(this.selected_resource, null, 2)
@@ -239,14 +241,16 @@ export default {
       await navigator.clipboard.writeText(resource_list);
     },
 
-    select_resource: function(resource) {
+    select_resource: async function(resource) {
       if (this.selected_resource._id === resource._id) {
         this.selected_resource = {};
       } else {
         this.selected_resource = resource;
-        //TODO: Check if this (toggle_tags) is reactiveable good practice (bad smell) or it should be moved to watched
-        this.open_tags = false;
-        this.rerender_component();
+        await this.lazy_get_full_resource(resource._id).then(() => {
+          //TODO: Check if this (toggle_tags) is reactiveable good practice (bad smell) or it should be moved to watched
+          this.open_tags = false;
+          this.rerender_component();
+        });
       }
     },
 

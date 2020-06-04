@@ -3,23 +3,22 @@ import {
   AUTH_REQUEST,
   AUTH_ERROR,
   AUTH_SUCCESS,
-  AUTH_LOGOUT
+  AUTH_LOGOUT,
 } from "../actions/auth";
 
-import { USER_REQUEST } from "../actions/user";
 import api_call from "../../utils/api";
 
 const state = {
   token: localStorage.getItem("user-token") || "",
   status: "",
   hasLoadedOnce: false,
-  username: ""
+  username: "",
 };
 
 const getters = {
-  is_authenticated: state => !!state.token,
-  auth_status: state => state.status,
-  username: state => state.username
+  is_authenticated: (state) => !!state.token,
+  auth_status: (state) => state.status,
+  username: (state) => state.username,
 };
 
 const actions = {
@@ -27,7 +26,7 @@ const actions = {
     return new Promise((resolve, reject) => {
       commit(AUTH_REQUEST);
       api_call({ url: "/api/auth", data: user })
-        .then(resp => {
+        .then((resp) => {
           localStorage.setItem("user-token", resp.data.token);
           // Here set the header of your ajax library to the token value.
           // example with axios
@@ -36,7 +35,7 @@ const actions = {
           //dispatch(USER_REQUEST);
           resolve(resp);
         })
-        .catch(err => {
+        .catch((err) => {
           commit(AUTH_ERROR, err);
           localStorage.removeItem("user-token");
           reject(err);
@@ -49,11 +48,11 @@ const actions = {
       localStorage.removeItem("user-token");
       resolve();
     });
-  }
+  },
 };
 
 const mutations = {
-  [AUTH_REQUEST]: state => {
+  [AUTH_REQUEST]: (state) => {
     state.status = "loading";
   },
   [AUTH_SUCCESS]: (state, resp) => {
@@ -62,20 +61,20 @@ const mutations = {
     state.hasLoadedOnce = true;
     state.username = resp.data.username;
   },
-  [AUTH_ERROR]: state => {
+  [AUTH_ERROR]: (state) => {
     state.status = "error";
     state.hasLoadedOnce = true;
   },
-  [AUTH_LOGOUT]: state => {
+  [AUTH_LOGOUT]: (state) => {
     state.token = "";
     state.username = "";
     localStorage.clear();
-  }
+  },
 };
 
 export default {
   state,
   getters,
   actions,
-  mutations
+  mutations,
 };
