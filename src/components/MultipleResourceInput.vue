@@ -1,6 +1,6 @@
 <template>
   <v-layout row>
-    <v-dialog v-model="dialog" width="700">
+    <v-dialog v-model="dialog" width="50%">
       <template v-slot:activator="{ on }">
         <v-btn fab bottom right color="blue" dark fixed v-on="on">
           <v-icon>add</v-icon>
@@ -14,16 +14,17 @@
           <v-label v-if="preprocess_resources">{{ preprocess_resources.length }} resources in total</v-label>
           <v-divider />
           <v-card-text>
-            <v-flex fluid class="subheading">
+            <v-flex fluid>
               <v-form ref="resource_form">
                 <v-textarea
                   ref="resource_list_textarea"
                   v-model="resource_list_model"
                   box
                   rows="1"
-                  class="body-1"
+                  class="scroll-y"
                   :auto-grow="true"
                   label="Paste or enter resources"
+                  style="max-height: 600px"
                 />
                 <v-divider />
               </v-form>
@@ -35,60 +36,58 @@
           <v-card-title class="title">Validated resources</v-card-title>
           <v-divider></v-divider>
           <v-flex v-if="preprocess_resources">
-            <v-label>You can change the type by pressing in it.</v-label>
+            <v-label>You can change type by pressing on it.</v-label>
             <v-divider></v-divider>
           </v-flex>
           <v-flex v-else headline>
             <v-label>No entries yet</v-label>
           </v-flex>
           <v-card-text>
-            <v-flex fluid>
-              <v-list>
+            <v-container class="scroll-y" style="max-height: 600px">
+              <v-list avatar>
                 <v-list-tile v-for="item in preprocess_resources" :key="item.resource">
-                  <v-flex>
-                    <v-list-tile-avatar>
-                      <div class="text-xs-center">
-                        <v-menu offset-y>
-                          <template v-slot:activator="{ on }">
-                            <v-chip
-                              :color="item.color"
-                              label
-                              class="font-weight-bold"
-                              v-on="on"
-                            >{{ item.type }}</v-chip>
-                          </template>
-                          <v-list>
-                            <v-list-tile
-                              v-for="(type, index) in types"
-                              :key="index"
-                              @click="patch_type(item.resource, type)"
-                            >
-                              <v-list-tile-title>{{ type }}</v-list-tile-title>
-                            </v-list-tile>
-                          </v-list>
-                        </v-menu>
-                      </div>
-                    </v-list-tile-avatar>
-                  </v-flex>
-                  <v-flex>
-                    <v-list-tile-content>{{ item.resource }}</v-list-tile-content>
-                  </v-flex>
+                  <v-list-tile-avatar>
+                    <div class="text-xs-center">
+                      <v-menu offset-y>
+                        <template v-slot:activator="{ on }">
+                          <v-chip
+                            :color="item.color"
+                            label
+                            class="font-weight-bold"
+                            v-on="on"
+                          >{{ item.type }}</v-chip>
+                        </template>
+                        <v-list>
+                          <v-list-tile
+                            v-for="(type, index) in types"
+                            :key="index"
+                            @click="patch_type(item.resource, type)"
+                          >
+                            <v-list-tile-title>{{ type }}</v-list-tile-title>
+                          </v-list-tile>
+                        </v-list>
+                      </v-menu>
+                    </div>
+                  </v-list-tile-avatar>
+                  <v-list-tile-content>
+                    <v-list-tile-title body-2 text-truncate>
+                      <v-flex offset-xs1>{{ item.resource }}</v-flex>
+                    </v-list-tile-title>
+                  </v-list-tile-content>
                 </v-list-tile>
               </v-list>
-            </v-flex>
-            <v-divider></v-divider>
-            <v-layout>
-              <v-flex>
-                <v-btn color="primary" @click.stop="validate = false">BACK</v-btn>
-              </v-flex>
-              <v-flex v-if="preprocess_resources">
-                <v-btn
-                  color="green"
-                  @click.stop="[validate = false, dialog = false, send()]"
-                >Upload {{ preprocess_resources.length }} items</v-btn>
-              </v-flex>
-            </v-layout>
+            </v-container>
           </v-card-text>
+          <v-divider></v-divider>
+          <v-card-actions>
+            <v-btn flat color="primary" @click.stop="validate = false">BACK</v-btn>
+            <v-btn
+              v-if="preprocess_resources"
+              color="green"
+              flat
+              @click.stop="[validate = false, dialog = false, send()]"
+            >Upload {{ preprocess_resources.length }} items</v-btn>
+          </v-card-actions>
         </v-card>
       </v-flex>
     </v-dialog>
@@ -97,11 +96,20 @@
 
 <script>
 import validator from "validator";
+import {
+  regexp_url,
+  regexp_ipv4,
+  regexp_hash,
+  regexp_email,
+  regexp_domain,
+  tlds
+} from "../utils/regexp";
 
 export default {
   name: "MultipleResourceInput",
   data() {
     return {
+      checkbox: false,
       resource_list_model: "",
       validate: false,
       dialog: false,
@@ -125,29 +133,62 @@ export default {
     preprocess_resources() {
       if (!this.resource_list_model) return;
 
-      let values = this.resource_list_model
-        .trim()
-        .split("\n")
-        .filter(elem => elem.length > 0);
+      let values = this.scan(this.resource_list_model);
 
+      // Avoid repeated entries
       values = [...new Set(values)];
 
       let classified_resources = [];
 
-      values.forEach(element => {
+      values.map(element => {
         let resource_type = this.classify(element);
 
-        classified_resources.push({
-          resource: element,
-          type: resource_type.type,
-          color: resource_type.color
-        });
+        if (Object.keys(resource_type).length !== 0) {
+          classified_resources.push({
+            resource: element,
+            type: resource_type.type,
+            color: resource_type.color
+          });
+        }
       });
 
-      return classified_resources;
+      return classified_resources.sort((a, b) => a.type.localeCompare(b.type));
     }
   },
   methods: {
+    scan: function(tx) {
+      let text = tx;
+      // Protected IOCs
+      text = text.replace(/hxxp/gi, "http").replace(/\[.\]/gi, ".");
+      text = text.split("\n");
+
+      let collected = [];
+
+      text.map(line => {
+        let m = line.match(regexp_url);
+        if (m) {
+          collected.push(m);
+        }
+        m = line.match(regexp_ipv4);
+        if (m) {
+          collected.push(m);
+        }
+        m = line.match(regexp_hash);
+        if (m) {
+          collected.push(m);
+        }
+        m = line.match(regexp_email);
+        if (m) {
+          collected.push(m);
+        }
+        m = line.match(regexp_domain);
+        if (m && tlds.includes(m[0].split(".").slice(-1)[0])) {
+          collected.push(m);
+        }
+      });
+
+      return collected.flat();
+    },
     colorize_type(type) {
       switch (type) {
         case "ip":
@@ -157,7 +198,7 @@ export default {
         case "url":
           return "orange";
         case "domain":
-          return "green";
+          return "indigo";
         case "hash":
           return "purple";
         case "username":
@@ -210,9 +251,7 @@ export default {
         return { type: "hash", color: this.colorize_type("hash") };
       }
 
-      // Fallback case, treat as a username
-      //TODO: Be aware of the incomming 'string' type
-      return { type: "username", color: "red" };
+      return {};
     },
     send() {
       this.preprocess_resources.forEach(new_resource => {
@@ -240,8 +279,6 @@ export default {
 
 <style scoped>
 .v-list {
-  max-height: 500px;
-  overflow-y: auto;
   overflow-x: hidden;
 }
 
