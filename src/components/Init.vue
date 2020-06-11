@@ -3,16 +3,16 @@
     <v-content>
       <v-container fluid fill-height>
         <v-layout align-center justify-center>
-          <v-card class="elevation-12">
+          <v-card class="elevation-12" width="400">
             <v-toolbar color="grey darken-3" dark flat>
               <v-spacer>
-                <v-toolbar-title>The Threat Hunting Environment</v-toolbar-title>
+                <v-toolbar-title>thethe init user</v-toolbar-title>
               </v-spacer>
             </v-toolbar>
             <v-card-text>
-              <v-form class="login" @submit.prevent="login" ref="login_form" id="login_form">
+              <v-form class="login" @submit.prevent="save" ref="new_user_form" id="new_user_form">
                 <v-text-field
-                  label="Login"
+                  label="New thethe user"
                   name="login"
                   prepend-icon="person"
                   type="text"
@@ -27,19 +27,21 @@
                   type="password"
                   v-model="password"
                 ></v-text-field>
+                <v-text-field
+                  id="password_confirmation"
+                  label="repeat password"
+                  name="password"
+                  prepend-icon="lock"
+                  type="password"
+                  v-model="password_confirmation"
+                ></v-text-field>
+                <v-alert :value="error" type="error">{{ error_message }}</v-alert>
               </v-form>
             </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn type="submit" color="primary" form="login_form">Login</v-btn>
+              <v-btn type="submit" color="primary" form="new_user_form">Save</v-btn>
             </v-card-actions>
-            <template v-if="auth_status === 'error'">
-              <v-alert
-                type="error"
-                dismissible
-                :value="true"
-              >User does not exist or Password is wrong</v-alert>
-            </template>
           </v-card>
         </v-layout>
         <status-bar></status-bar>
@@ -51,9 +53,6 @@
 
 <script>
 import StatusBar from "./StatusBar";
-
-import { AUTH_REQUEST } from "../store/actions/auth";
-import { mapGetters } from "vuex";
 import api_call from "../utils/api";
 
 export default {
@@ -63,41 +62,29 @@ export default {
   data() {
     return {
       username: "",
-      password: ""
+      password: "",
+      password_confirmation: "",
+      error: false,
+      error_message: ""
     };
   },
   methods: {
-    login: function() {
-      const { username, password } = this;
-      this.$store
-        .dispatch(AUTH_REQUEST, { username, password })
+    save: function() {
+      const { username, password, password_confirmation } = this;
+      api_call({
+        url: "/api/init",
+
+        username: username,
+        pass1: password,
+        pass2: password_confirmation
+      })
         .then(() => {
           this.$router.push("/");
         })
-        .catch(err => this.$refs.login_form.reset());
-    }
-  },
-  computed: {
-    ...mapGetters({ auth_status: "auth_status" })
-  },
-
-  beforeMount: function() {
-    api_call({
-      url: "/api/check_init"
-    })
-      .then(resp => {
-        if (resp.data) {
-          this.$router.push("/init");
-        }
-      })
-      .catch(err => {
-        console.log(err);
-      });
-
-    if (this.$store.getters["is_authenticated"]) {
-      if (this.$route.name !== "login") {
-        this.$router.push("/login");
-      }
+        .catch(err => {
+          (this.error = true), (this.error_message = err.data.error_message);
+          this.$refs.new_user_form.reset();
+        });
     }
   }
 };

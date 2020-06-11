@@ -26,11 +26,16 @@ axios.interceptors.response.use(
       switch (error.response.status) {
         case 401:
           store.dispatch(AUTH_LOGOUT);
-          if (router.history.current.fullPath !== "/login")
+          if (
+            router.history.current.fullPath === "/login" ||
+            router.history.current.fullPath === "/init"
+          ) {
+            return Promise.reject(error.response);
+          } else {
             router.push("/login").catch((err) => {
               console.log(err);
             });
-          return Promise.reject(error.response);
+          }
 
         case 400:
           return Promise.reject(error.response);
