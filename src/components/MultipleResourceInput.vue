@@ -28,6 +28,7 @@
                 />
                 <v-divider />
               </v-form>
+              <v-checkbox v-model="are_usernames" label="Parse as usernames"></v-checkbox>
               <v-btn color="primary" @click.stop="validate = true">VALIDATE</v-btn>
             </v-flex>
           </v-card-text>
@@ -109,13 +110,13 @@ export default {
   name: "MultipleResourceInput",
   data() {
     return {
-      checkbox: false,
+      are_usernames: false,
       resource_list_model: "",
       validate: false,
       dialog: false,
       user_type_patch_list: [],
 
-      //TODO: THIS DOES NOT SCALE UP WELL, AND YOU KNOW IT (Jules Churchs)
+      //TODO: These types are hardcoded -> change to dynamic
       types: ["ip", "email", "url", "domain", "hash", "username"]
     };
   },
@@ -132,6 +133,21 @@ export default {
   computed: {
     preprocess_resources() {
       if (!this.resource_list_model) return;
+
+      if (this.are_usernames) {
+        let resources = [];
+        this.resource_list_model
+          .split("\n")
+          .map(entry =>
+            resources.push({
+              resource: entry,
+              type: "username",
+              color: this.colorize_type("username")
+            })
+          )
+          .sort();
+        return resources;
+      }
 
       let values = this.scan(this.resource_list_model);
 
