@@ -1,5 +1,5 @@
 <template>
-  <v-flex>
+  <v-flex v-if="Object.keys(resource).length !== 0">
     <v-expansion-panel accordion>
       <v-expansion-panel-content>
         <template v-slot:header>
