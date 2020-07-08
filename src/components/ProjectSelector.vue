@@ -1,10 +1,7 @@
 <template>
   <v-layout fluid wrap>
     <v-flex offset-lg4 lg4 pt-5>
-      <v-card
-        v-on:dismiss="delete_dialog = !delete_dialog"
-        v-on:dodelete="delete_project_with_confirmation"
-      >
+      <v-card>
         <v-card-title>
           <v-card-text>
             <p class="headline blue--text text--lighten-2 text-xs-center">Project selection</p>
@@ -33,6 +30,8 @@
           title="Delete Project?"
           text="This project and all its references will be deleted. Are you sure?"
           :show="delete_dialog"
+          v-on:dismiss="delete_dialog = !delete_dialog"
+          v-on:dodelete="delete_project_with_confirmation"
         ></delete-dialog>
       </v-card>
 

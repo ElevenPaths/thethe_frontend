@@ -1,10 +1,7 @@
 <template>
   <v-layout class="pa-1">
     <v-flex :class="{ [`lg${grid_space}`]: true }" v-if="list_not_empty || filter">
-      <v-card
-        v-on:dismiss="remove_resource = !remove_resource"
-        v-on:dodelete="remove_resource_with_confirmation"
-      >
+      <v-card>
         <v-card-title class="pa-0">
           <v-card-text>
             <v-flex class="subheading blue--text text--lighten-2 text-xs-center ma-0 pa-0"></v-flex>
@@ -125,6 +122,8 @@
           title="Are you sure?"
           text="This will unlink the resource from this project"
           :show="remove_resource"
+          v-on:dismiss="remove_resource = !remove_resource"
+          v-on:dodelete="remove_resource_with_confirmation"
         ></delete-dialog>
       </v-card>
     </v-flex>

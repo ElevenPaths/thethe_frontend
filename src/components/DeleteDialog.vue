@@ -6,9 +6,7 @@
       <v-spacer></v-spacer>
       <v-card-actions>
         <v-flex>
-          <v-btn color="green darken-1" flat @click.stop="dontdoit"
-            >No, dismiss</v-btn
-          >
+          <v-btn color="green darken-1" flat @click.stop="dontdoit">No, dismiss</v-btn>
           <v-btn color="red darken-1" flat @click.stop="doit">Yes, do it</v-btn>
         </v-flex>
       </v-card-actions>
@@ -22,10 +20,10 @@ export default {
   props: ["title", "text", "show"],
   methods: {
     dontdoit: function() {
-      this.$parent.$emit("dismiss");
+      this.$emit("dismiss");
     },
     doit: function() {
-      this.$parent.$emit("dodelete");
+      this.$emit("dodelete");
     }
   }
 };

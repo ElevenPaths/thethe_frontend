@@ -1,67 +1,121 @@
 <template>
-  <v-dialog v-model="show" persistent max-width="760">
+  <v-dialog v-model="show" persistent max-width="75%">
     <v-card>
       <v-card-title class="headline">API Keys Management</v-card-title>
+      <v-divider></v-divider>
       <v-card-text>
-        <v-container>
-          <div v-if="apikeys.length">
-            <api-keys-item
-              v-for="apikey in apikeys"
-              v-model="apikey.apikey"
-              :key="apikey.name"
-              :service="apikey.name"
-              :apikey="apikey.apikey"
-              @remove="removeKey"
-              @input="modified = true"
-            ></api-keys-item>
-          </div>
-          <b v-else>No API Keys yet...</b>
-          <base-input-service v-show="add" :reset="!add" @add="addKey"></base-input-service>
-        </v-container>
+        <v-layout>
+          <v-flex xs3>
+            <v-layout column>
+              <v-flex>
+                <v-switch v-model="only_without_keys" label="Key needed only"></v-switch>
+              </v-flex>
+              <v-divider></v-divider>
+              <v-flex v-if="apikeys" scrollable>
+                <v-list>
+                  <v-list-tile
+                    v-for="plugin in keys"
+                    :key="plugin.name"
+                    @click.stop="selected_plugin=plugin"
+                  >
+                    <v-list-tile-avatar>
+                      <v-icon
+                        v-if="plugin.apikeys.some(e => e.value.length === 0)"
+                        color="red"
+                      >warning</v-icon>
+                      <v-icon v-else color="green">done</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>{{ plugin.name }}</v-list-tile-content>
+                  </v-list-tile>
+                </v-list>
+              </v-flex>
+              <v-flex v-else class="font-weight-bold">No API Keys yet...</v-flex>
+            </v-layout>
+          </v-flex>
+          <v-flex ml-2>
+            <api-key-details :plugin="selected_plugin" :private="password" @change="update_key"></api-key-details>
+          </v-flex>
+        </v-layout>
       </v-card-text>
+      <v-divider></v-divider>
       <v-card-actions>
-        <v-flex>
-          <v-btn color="green darken-1" flat @click="add = !add">Add</v-btn>
-          <v-btn
-            color="blue darken-1"
-            flat
-            :disabled="!modified"
-            @click.stop="send_apikeys(), $emit('apikeys-closed')"
-          >Save</v-btn>
-          <v-btn
-            color="red darken-1"
-            flat
-            @click.stop="
-              $emit('apikeys-closed');
-              add = false;
-            "
-          >Close</v-btn>
-        </v-flex>
+        <v-layout align-center justify-center>
+          <v-flex>
+            <v-btn
+              color="yellow darken-1"
+              flat
+              :disabled="!modified"
+              @click.stop="send_apikeys(), $emit('apikeys-closed')"
+            >upload</v-btn>
+            <v-btn color="red darken-1" flat @click.stop="close_dialog">Close</v-btn>
+          </v-flex>
+          <v-flex shrink text-xs-right>
+            <v-icon v-if="password" color="green" @click.stop="toggle_password">visibility_off</v-icon>
+            <v-icon v-else color="red" @click.stop="toggle_password">visibility</v-icon>
+          </v-flex>
+        </v-layout>
       </v-card-actions>
     </v-card>
+    <delete-dialog
+      title="There are unsaved changes"
+      text="Are you sure to close dialog?"
+      :show="delete_dialog"
+      @dismiss="delete_dialog = !delete_dialog"
+      @dodelete="[modified=false, close_dialog()]"
+    ></delete-dialog>
   </v-dialog>
 </template>
 
 <script>
 import api_call from "../utils/api";
-import ApiKeysItem from "./ApiKeysItem.vue";
-import BaseInputService from "./BaseInputService.vue";
+import ApiKeyDetails from "./ApiKeyDetails.vue";
+import DeleteDialog from "./DeleteDialog";
 
 export default {
   props: { show: Boolean },
   components: {
-    ApiKeysItem,
-    BaseInputService
+    ApiKeyDetails,
+    DeleteDialog
   },
   data() {
     return {
       apikeys: [],
-      add: false,
-      delKeys: [],
-      modified: false
+      updated_keys: [],
+      modified: false,
+      selected_plugin: null,
+      only_without_keys: false,
+      password: true,
+      delete_dialog: false
     };
   },
+  computed: {
+    keys: function() {
+      this.selected_plugin = null;
+      if (this.only_without_keys) {
+        return this.apikeys.filter(
+          e => e.apikeys.filter(ee => ee.value.length === 0).length > 0
+        );
+      }
+      return this.apikeys;
+    }
+  },
   methods: {
+    close_dialog() {
+      this.password = true;
+      if (this.modified) {
+        this.delete_dialog = true;
+      } else {
+        this.delete_dialog = false;
+        this.$emit("apikeys-closed");
+      }
+    },
+    update_key(update) {
+      this.modified = true;
+      this.updated_keys.push(update);
+    },
+    toggle_password: function() {
+      this.password = !this.password;
+    },
     load_keys: function() {
       let params = {
         url: "/api/get_apikeys"
@@ -79,45 +133,40 @@ export default {
     send_apikeys: function() {
       var params = {
         url: "/api/upload_apikeys",
-        entries: this.apikeys
+        entries: this.updated_keys
       };
 
-      api_call(params);
-
-      if (this.delKeys.length) {
-        var params = {
-          url: "/api/remove_apikeys",
-          entries: this.delKeys
-        };
-
-        api_call(params);
-
-        this.delKeys = [];
-      }
-
-      this.modified = false;
-    },
-    addKey(service, api) {
-      this.apikeys.push({
-        name: service,
-        apikey: api
-      });
-      this.add = false;
-      this.modified = true;
-    },
-    removeKey(keyToRemove) {
-      this.apikeys = this.apikeys.filter(apikey => {
-        return apikey.name !== keyToRemove;
-      });
-
-      this.delKeys.push({ name: keyToRemove });
-      this.modified = true;
+      api_call(params)
+        .then(resp => {
+          this.$notify({
+            title: "Info",
+            text: resp.data.success_message
+          });
+          this.modified = false;
+        })
+        .catch(err => {
+          this.$notify({
+            title: "Error",
+            text: err.data.error_message,
+            type: "error"
+          });
+        });
     }
   },
-  mounted: function() {
-    if (this.$store.getters["is_authenticated"]) {
-      this.load_keys();
+  watch: {
+    show: function(newValue, oldValue) {
+      if (newValue) {
+        this.only_without_keys = false;
+        this.load_keys();
+      }
     }
   }
 };
 </script>
+
+<style scoped>
+.v-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+</style>
