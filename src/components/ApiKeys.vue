@@ -19,10 +19,7 @@
                     @click.stop="selected_plugin=plugin"
                   >
                     <v-list-tile-avatar>
-                      <v-icon
-                        v-if="plugin.apikeys.some(e => e.value.length === 0)"
-                        color="red"
-                      >warning</v-icon>
+                      <v-icon v-if="plugin.apikeys.some(e => !e.value)" color="red">warning</v-icon>
                       <v-icon v-else color="green">done</v-icon>
                     </v-list-tile-avatar>
                     <v-list-tile-content>{{ plugin.name }}</v-list-tile-content>
@@ -93,7 +90,7 @@ export default {
       this.selected_plugin = null;
       if (this.only_without_keys) {
         return this.apikeys.filter(
-          e => e.apikeys.filter(ee => ee.value.length === 0).length > 0
+          e => e.apikeys.filter(ee => !ee.value).length > 0
         );
       }
       return this.apikeys;
