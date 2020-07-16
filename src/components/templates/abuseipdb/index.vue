@@ -1,11 +1,11 @@
 <template>
-  <v-flex class="text-xs-left">
+  <v-flex>
     <v-divider></v-divider>
-    <v-layout row wrap class="subheading">
+    <v-layout>
       <v-flex>
-        <v-layout align-center>
-          <v-flex lg1 title>Abuse Confidence Score</v-flex>
-          <v-flex offset-lg1 lg2>
+        <v-layout align-center justify-center>
+          <v-flex text-xs-left xs1 title>Abuse Confidence Score</v-flex>
+          <v-flex>
             <v-progress-circular
               :rotate="360"
               :size="100"
@@ -14,31 +14,27 @@
               :color="abuse_confidence_score_color"
             >{{ resource.abuseConfidenceScore }}%</v-progress-circular>
           </v-flex>
-          <v-flex offset-lg1>
-            <v-layout column>
-              <v-layout>
-                <v-flex lg2>Total reports</v-flex>
-                <v-flex>{{ resource.totalReports }}</v-flex>
-              </v-layout>
-              <v-layout>
-                <v-flex lg2>Distinc users</v-flex>
-                <v-flex>{{ resource.numDistinctUsers }}</v-flex>
-              </v-layout>
-              <v-layout>
-                <v-flex lg2>Domain</v-flex>
-                <v-flex>{{ resource.domain }}</v-flex>
-              </v-layout>
-              <v-layout align-center>
-                <v-flex lg2>Reported at</v-flex>
-                <v-flex v-if="resource.lastReportedAt">
-                  {{ new Date(resource.lastReportedAt).toLocaleDateString() }}
-                  <v-chip>{{ days_ago }}</v-chip>
-                  <span>days ago</span>
-                </v-flex>
-                <v-flex v-else>
-                  <span>N/D</span>
-                </v-flex>
-              </v-layout>
+          <v-flex>
+            <v-layout py-2 column text-xs-left>
+              <v-flex>Total reports</v-flex>
+              <v-flex>Distinct users</v-flex>
+              <v-flex>Domain</v-flex>
+              <v-flex>Reported at</v-flex>
+            </v-layout>
+          </v-flex>
+          <v-flex>
+            <v-layout column text-xs-left>
+              <v-flex>{{ resource.totalReports }}</v-flex>
+              <v-flex>{{ resource.numDistinctUsers }}</v-flex>
+              <v-flex class="font-weight-bold">{{ resource.domain }}</v-flex>
+              <v-flex v-if="resource.lastReportedAt">
+                {{ new Date(resource.lastReportedAt).toLocaleDateString() }}
+                <v-chip>{{ days_ago }}</v-chip>
+                <span>days ago</span>
+              </v-flex>
+              <v-flex v-else>
+                <span>N/D</span>
+              </v-flex>
             </v-layout>
           </v-flex>
         </v-layout>

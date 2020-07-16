@@ -264,16 +264,28 @@ const getters = {
       (elem) => elem.resource_type === resource_type
     );
   },
+
   runningTasks: (state) => {
     return state.resources.filter((plugins) =>
       plugins.plugins.some((results) => results.results === "loading")
     );
   },
+
   is_loading: (state) => {
     return state.loading_resources;
   },
+
   get_resource: (state) => (id) => {
     return state.resources.filter((elem) => elem._id === id);
+  },
+
+  get_resource_type: (state) => (id) => {
+    let resource = state.resources.filter((elem) => elem._id === id);
+    if (resource.length > 0) {
+      return resource[0].resource_type;
+    } else {
+      return null;
+    }
   },
 };
 
