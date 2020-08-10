@@ -27,14 +27,48 @@
         </v-tab>
         <v-tabs-items>
           <v-tab-item v-for="entry in sorted_plugin_list" :key="entry.index" lazy>
-            <dynamic-link :type="entry.plugin.name" :data="entry.plugin" :key="component_key"></dynamic-link>
-            <v-divider></v-divider>
-            <time-machine
-              :resource="resource._id"
-              :timemachine="entry.plugin.timemachine"
-              :plugin="entry.plugin.name"
-              :timestamp="entry.plugin.timestamp"
-            ></time-machine>
+            <v-container>
+              <v-layout justify-center align-center wrap>
+                <v-flex v-if="entry.plugin.timestamp" text-xs-left shrink>
+                  <v-chip
+                    small
+                    label
+                    class="font-weight-bold"
+                  >{{ new Date(entry.plugin.timestamp*1000).toDateString()}}</v-chip>
+                </v-flex>
+                <v-flex text-xs-left>
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-btn icon :disabled="!getResult(entry.plugin.name).result">
+                        <v-icon
+                          v-on="on"
+                          color="green"
+                          @click.stop="setScanOn(entry.plugin.name)"
+                        >mdi-radar</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Scan results for new IOCs</span>
+                  </v-tooltip>
+                </v-flex>
+                <v-flex xs12>
+                  <v-divider></v-divider>
+                </v-flex>
+                <v-flex xs12>
+                  <dynamic-link :type="entry.plugin.name" :data="entry.plugin" :key="component_key"></dynamic-link>
+                </v-flex>
+                <v-flex xs12>
+                  <v-divider></v-divider>
+                </v-flex>
+                <v-flex xs12>
+                  <time-machine
+                    :resource="resource._id"
+                    :timemachine="entry.plugin.timemachine"
+                    :plugin="entry.plugin.name"
+                    :timestamp="entry.plugin.timestamp"
+                  ></time-machine>
+                </v-flex>
+              </v-layout>
+            </v-container>
           </v-tab-item>
         </v-tabs-items>
       </v-tabs>
@@ -51,6 +85,8 @@ import DynamicLink from "./DynamicComponent";
 import CopyToClipboard from "./CopyToClipboard";
 import TimeMachine from "./TimeMachine";
 
+import { mapGetters, mapActions } from "vuex";
+
 export default {
   name: "resource-detail",
   props: {
@@ -65,6 +101,7 @@ export default {
     };
   },
   computed: {
+    ...mapGetters("results", { getResult: "get" }),
     sorted_plugin_list: function() {
       let plugins = this.resource.plugins.sort((a, b) => {
         if (a.name > b.name) {
@@ -85,6 +122,10 @@ export default {
       return plugin_list;
     }
   },
+  methods: {
+    ...mapActions(["LOAD_TAGS"]),
+    ...mapActions("results", { clearResult: "clear", setScanOn: "setOn" })
+  },
   watch: {
     resource: {
       //HACK: Again, to reload dynamic component when new data arrives
@@ -92,8 +133,12 @@ export default {
       deep: true,
       handler: function() {
         this.component_key += 1;
+        this.clearResult();
       }
     }
+  },
+  beforeMount: function() {
+    this.LOAD_TAGS();
   }
 };
 </script>

@@ -1,56 +1,70 @@
 import Vue from "vue";
 import Vuex from "vuex";
 
-import api_call from "../../utils/api";
+import { api_call } from "../../utils/api";
 
 Vue.use(Vuex);
 
 const state = {
   resources: [],
+  timeline: [],
   running: [],
   loading_resources: false,
 };
 
 const actions = {
-  add_tag: async function({ commit }, params) {
-    let url = "/api/add_tag";
-
-    await api_call({ url: url, params }).then((resp) => {
-      let type = "error";
-      if (resp.data.done) {
-        type = "success";
-        commit("add_tag", params);
-      }
-      Vue.notify({
-        type: type,
-        title: `<b>Tags</b>`,
-        text: `${resp.data.message}`,
-      });
-    });
+  add_resource_to_timeline: function({ commit }, resource) {
+    commit("add_resource_to_timeline", resource);
   },
 
-  remove_tag: async function({ commit }, params) {
+  reset_timeline: function({ commit }) {
+    commit("reset_timeline");
+  },
+
+  ADD_TAG_TO_RESOURCE: function({ commit }, { resource_id, tag_id }) {
+    let url = "/api/add_tag";
+    api_call({
+      url: url,
+      resource_id: resource_id,
+      tag_id: tag_id,
+    })
+      .then((resp) => {
+        commit("ADD_TAG_TO_RESOURCE", { resource_id, tag_id });
+      })
+      .catch((err) => {
+        Vue.notify({
+          type: "error",
+          title: `<b>Tags ERROR</b>`,
+          text: err,
+        });
+      });
+  },
+
+  REMOVE_TAG_FROM_RESOURCE: function({ commit }, { resource_id, tag_id }) {
     let url = "/api/remove_tag";
 
-    await api_call({ url: url, params }).then((resp) => {
-      let type = "error";
-      if (resp.data.done) {
-        type = "success";
-        commit("remove_tag", params);
-      }
-      Vue.notify({
-        type: type,
-        title: `<b>Tags</b>`,
-        text: `${resp.data.message}`,
+    api_call({
+      url: url,
+      resource_id: resource_id,
+      tag_id: tag_id,
+    })
+      .then((resp) => {
+        commit("REMOVE_TAG_FROM_RESOURCE", { resource_id, tag_id });
+      })
+      .catch((err) => {
+        Vue.notify({
+          type: "error",
+          title: `<b>Tags ERROR</b>`,
+          text: err,
+        });
       });
-    });
   },
 
   lazy_get_full_resource: async function({ commit, getters }, resource_id) {
     let url = "/api/get_full_resource";
     let resource = getters.get_resource(resource_id);
 
-    if (resource.length === 1 && resource[0].full) {
+    if (resource && resource.full) {
       return;
     }
 
@@ -162,20 +176,39 @@ const actions = {
 };
 
 const mutations = {
-  add_tag: function(commit, params) {
-    let resource = state.resources.find(
-      (elem) => elem._id == params.resource_id
+  add_resource_to_timeline: function(commit, resource) {
+    let found_resource = state.timeline.filter(
+      (elem) => elem._id === resource._id
     );
-    resource.tags.push(params.tag);
+
+    if (found_resource.length === 0) {
+      state.timeline.push(resource);
+    }
   },
 
-  remove_tag: function(commit, params) {
-    let resource = state.resources.find(
-      (elem) => elem._id == params.resource_id
-    );
-    resource.tags = resource.tags.filter(
-      (elem) => elem.name != params.tag.name
-    );
+  reset_timeline: function(commit) {
+    state.timeline = [];
+  },
+
+  ADD_TAG_TO_RESOURCE: function(commit, { resource_id, tag_id }) {
+    let resource = state.resources.find((elem) => elem._id === resource_id);
+    // Detect if tag is already there (user has click on same tag)
+    if (!resource.tags.find((tag) => tag === tag_id)) {
+      resource.tags.push(tag_id);
+    }
+  },
+
+  REMOVE_TAG_FROM_RESOURCE: function(commit, { resource_id, tag_id }) {
+    let resource = state.resources.find((elem) => elem._id === resource_id);
+    resource.tags = resource.tags.filter((tag) => tag !== tag_id);
+  },
+
+  REMOVE_TAG_FROM_RESOURCES: function(commit, { tag_id }) {
+    state.resources.map((resource) => {
+      if ("tags" in resource) {
+        resource.tags = resource.tags.filter((tag) => tag !== tag_id);
+      }
+    });
   },
 
   loading_resources: function(commit, is_loading) {
@@ -200,6 +233,7 @@ const mutations = {
 
   reset_resource_lists: function() {
     state.resources = [];
+    state.timeline = [];
   },
 
   unlink_resource: function(commit, resource_id) {
@@ -276,7 +310,7 @@ const getters = {
   },
 
   get_resource: (state) => (id) => {
-    return state.resources.filter((elem) => elem._id === id);
+    return state.resources.find((elem) => elem._id === id);
   },
 
   get_resource_type: (state) => (id) => {
@@ -286,6 +320,10 @@ const getters = {
     } else {
       return null;
     }
+  },
+
+  get_timeline: (state) => {
+    return state.timeline;
   },
 };
 

@@ -5,6 +5,8 @@ import resourcelist from "./modules/resourcelist";
 import auth from "./modules/auth";
 import user from "./modules/user";
 import project from "./modules/project";
+import tags from "./modules/tags";
+import results from "./modules/results";
 
 Vue.use(Vuex);
 
@@ -13,6 +15,8 @@ export default new Vuex.Store({
     resourcelist,
     auth,
     user,
-    project
-  }
+    project,
+    tags,
+    results,
+  },
 });

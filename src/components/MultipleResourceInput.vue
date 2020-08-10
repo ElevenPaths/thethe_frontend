@@ -1,6 +1,6 @@
 <template>
   <v-layout row>
-    <v-dialog v-model="dialog" width="50%">
+    <v-dialog v-model="dialog" width="50%" persistent>
       <template v-slot:activator="{ on }">
         <v-btn fab bottom right color="blue" dark fixed v-on="on">
           <v-icon>add</v-icon>
@@ -9,41 +9,64 @@
       <v-flex xs12>
         <v-card v-if="!validate">
           <v-card-title>
-            <span class="title">Resources</span>
+            <v-flex text-xs-left title>Resource input</v-flex>
+            <v-flex text-xs-right>
+              <the-button
+                round
+                small
+                color="red"
+                @click="[dialog=false, cleanup()]"
+                icon="mdi-close"
+              >Close dialog</the-button>
+            </v-flex>
           </v-card-title>
-          <v-label v-if="preprocess_resources">{{ preprocess_resources.length }} resources in total</v-label>
+          <v-label
+            v-if="preprocess_resources !== undefined"
+          >{{ preprocess_resources.length }} resources in total</v-label>
           <v-divider />
           <v-card-text>
-            <v-flex fluid>
-              <v-form ref="resource_form">
-                <v-textarea
-                  ref="resource_list_textarea"
-                  v-model="resource_list_model"
-                  box
-                  rows="1"
-                  class="scroll-y"
-                  :auto-grow="true"
-                  label="Paste or enter resources"
-                  style="max-height: 600px"
-                />
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="resource_form">
+                  <v-textarea
+                    ref="resource_list_textarea"
+                    v-model="resource_list_model"
+                    box
+                    rows="1"
+                    class="scroll-y"
+                    :auto-grow="true"
+                    label="Paste or enter resources"
+                    style="max-height: 600px"
+                  />
+                </v-form>
+              </v-flex>
+              <v-flex xs12>
+                <v-checkbox v-model="are_usernames" label="Parse as usernames"></v-checkbox>
+              </v-flex>
+              <v-flex xs12>
                 <v-divider />
-              </v-form>
-              <v-checkbox v-model="are_usernames" label="Parse as usernames"></v-checkbox>
-              <v-btn color="primary" @click.stop="validate = true">VALIDATE</v-btn>
-            </v-flex>
+              </v-flex>
+              <v-flex pt-1>
+                <the-button color="primary" @click="validate=true">Validate</the-button>
+              </v-flex>
+            </v-layout>
           </v-card-text>
         </v-card>
         <v-card v-else>
-          <v-card-title class="title">Validated resources</v-card-title>
+          <v-card-title class="title">
+            <v-flex text-xs-left title>Detected resources</v-flex>
+            <v-flex text-xs-right>
+              <the-button
+                round
+                small
+                color="red"
+                @click="[dialog=false, cleanup()]"
+                icon="mdi-close"
+              >Close dialog</the-button>
+            </v-flex>
+          </v-card-title>
           <v-divider></v-divider>
-          <v-flex v-if="preprocess_resources">
-            <v-label>You can change type by pressing on it.</v-label>
-            <v-divider></v-divider>
-          </v-flex>
-          <v-flex v-else headline>
-            <v-label>No entries yet</v-label>
-          </v-flex>
-          <v-card-text>
+          <v-card-text v-if="preprocess_resources !== undefined && preprocess_resources.length > 0">
             <v-container class="scroll-y" style="max-height: 600px">
               <v-list avatar>
                 <v-list-tile v-for="item in preprocess_resources" :key="item.resource">
@@ -71,23 +94,36 @@
                     </div>
                   </v-list-tile-avatar>
                   <v-list-tile-content>
-                    <v-list-tile-title body-2 text-truncate>
-                      <v-flex offset-xs1>{{ item.resource }}</v-flex>
+                    <v-list-tile-title body-2>
+                      <v-flex offset-xs1 text-truncate>{{ item.resource }}</v-flex>
                     </v-list-tile-title>
                   </v-list-tile-content>
+                  <v-list-tile-action>
+                    <v-flex pl-1>
+                      <the-button color="red" @click="unlisted.push(item.resource)">Remove</the-button>
+                    </v-flex>
+                  </v-list-tile-action>
                 </v-list-tile>
               </v-list>
             </v-container>
           </v-card-text>
+          <v-card-text v-else>
+            <v-flex subheading>No resources to upload</v-flex>
+          </v-card-text>
           <v-divider></v-divider>
           <v-card-actions>
-            <v-btn flat color="primary" @click.stop="validate = false">BACK</v-btn>
-            <v-btn
-              v-if="preprocess_resources"
-              color="green"
-              flat
-              @click.stop="[validate = false, dialog = false, send()]"
-            >Upload {{ preprocess_resources.length }} items</v-btn>
+            <v-layout>
+              <v-flex v-if="!scannedReady">
+                <the-button color="primary" @click="[validate = false, unlisted=[]]">Back</the-button>
+              </v-flex>
+              <v-flex v-if="preprocess_resources !== undefined">
+                <the-button
+                  :disabled="preprocess_resources.length === 0"
+                  color="green"
+                  @click="[send(), cleanup()]"
+                >Upload {{ preprocess_resources.length }} {{ preprocess_resources.length === 1? 'item' : 'items' }}</the-button>
+              </v-flex>
+            </v-layout>
           </v-card-actions>
         </v-card>
       </v-flex>
@@ -96,6 +132,8 @@
 </template>
 
 <script>
+import TheButton from "./TheButton";
+
 import validator from "validator";
 import {
   regexp_url,
@@ -103,11 +141,15 @@ import {
   regexp_hash,
   regexp_email,
   regexp_domain,
-  tlds
-} from "../utils/regexp";
+  tlds,
+  ioc_scan
+} from "../utils/ioc_scan";
+
+import { mapGetters, mapActions } from "vuex";
 
 export default {
   name: "MultipleResourceInput",
+  components: { TheButton },
   data() {
     return {
       are_usernames: false,
@@ -115,22 +157,30 @@ export default {
       validate: false,
       dialog: false,
       user_type_patch_list: [],
+      unlisted: [],
 
       //TODO: These types are hardcoded -> change to dynamic
       types: ["ip", "email", "url", "domain", "hash", "username"]
     };
   },
   watch: {
-    dialog: {
-      handler: function(old_value, new_value) {
-        if (this.$refs.resource_form && !new_value) {
-          this.$refs.resource_form.reset();
+    scannedReady: {
+      handler: function(new_value, old_value) {
+        if (new_value) {
+          this.dialog = true;
+          this.resource_list_model = this.getScanned(this.scannedName).result;
+          this.validate = true;
         }
-        this.validate = false;
       }
     }
   },
   computed: {
+    ...mapGetters("results", {
+      scannedReady: "ready",
+      scannedName: "scanned",
+      getScanned: "get"
+    }),
+
     preprocess_resources() {
       if (!this.resource_list_model) return;
 
@@ -138,6 +188,7 @@ export default {
         let resources = [];
         this.resource_list_model
           .split("\n")
+          .filter(entry => entry.trim().length > 0)
           .map(entry =>
             resources.push({
               resource: entry,
@@ -168,42 +219,26 @@ export default {
         }
       });
 
+      classified_resources = classified_resources.filter(
+        elem => !this.unlisted.includes(elem.resource)
+      );
+
       return classified_resources.sort((a, b) => a.type.localeCompare(b.type));
     }
   },
   methods: {
+    ...mapActions("results", { scannedOff: "setOff" }),
+
+    cleanup: function() {
+      this.dialog = false;
+      this.unlisted = [];
+      this.validate = false;
+      this.resource_list_model = "";
+      this.are_usernames = false;
+      this.scannedOff();
+    },
     scan: function(tx) {
-      let text = tx;
-      // Protected IOCs
-      text = text.replace(/hxxp/gi, "http").replace(/\[.\]/gi, ".");
-      text = text.split("\n");
-
-      let collected = [];
-
-      text.map(line => {
-        let m = line.match(regexp_url);
-        if (m) {
-          collected.push(m);
-        }
-        m = line.match(regexp_ipv4);
-        if (m) {
-          collected.push(m);
-        }
-        m = line.match(regexp_hash);
-        if (m) {
-          collected.push(m);
-        }
-        m = line.match(regexp_email);
-        if (m) {
-          collected.push(m);
-        }
-        m = line.match(regexp_domain);
-        if (m && tlds.includes(m[0].split(".").slice(-1)[0])) {
-          collected.push(m);
-        }
-      });
-
-      return collected.flat();
+      return ioc_scan(tx);
     },
     colorize_type(type) {
       switch (type) {

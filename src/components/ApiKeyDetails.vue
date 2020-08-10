@@ -67,7 +67,7 @@ export default {
   methods: {
     update_field: function(apikey_name, apikey_new_value) {
       let apikey = this.plugin.apikeys.find(e => e.name === apikey_name);
-      apikey.value = apikey_new_value;
+      apikey.value = apikey_new_value.trim();
       this.$emit("change", { name: apikey_name, value: apikey_new_value });
     }
   }

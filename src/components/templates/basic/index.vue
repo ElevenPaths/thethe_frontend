@@ -12,9 +12,7 @@
               v-for="ptr_record in resource.ptr"
               :key="ptr_record"
               class="font-weight-bold"
-            >
-              {{ ptr_record }}
-            </p>
+            >{{ ptr_record }}</p>
           </v-card-text>
         </v-card>
       </v-flex>
@@ -48,9 +46,7 @@
                   <v-flex>{{ resource.network.handle }}</v-flex>
                   <v-flex>{{ resource.network.name }}</v-flex>
                   <v-flex v-if="resource.network.country">
-                    <country-flag
-                      :country="resource.network.country"
-                    ></country-flag>
+                    <country-flag :country="resource.network.country"></country-flag>
                   </v-flex>
                 </v-layout>
               </v-flex>
@@ -98,9 +94,7 @@
                 <v-flex>{{ resource.asn.asn_description }}</v-flex>
                 <v-flex>{{ resource.asn.asn_registry }}</v-flex>
                 <v-flex>
-                  <country-flag
-                    :country="resource.asn.asn_country_code"
-                  ></country-flag>
+                  <country-flag :country="resource.asn.asn_country_code"></country-flag>
                 </v-flex>
               </v-layout>
             </v-flex>
@@ -113,6 +107,7 @@
 
 <script>
 import { make_unique_list } from "../../../utils/utils";
+import { mapActions, mapState } from "vuex";
 
 export default {
   name: "basic",
@@ -123,13 +118,34 @@ export default {
     return {};
   },
   computed: {
+    ...mapState("results", { scan: "ready" }),
     resource: function() {
       let plugin_result = { ...this.plugin_data.results };
-
       plugin_result.ptr = make_unique_list(plugin_result.ptr);
 
       return plugin_result;
     }
+  },
+  methods: {
+    ...mapActions("results", { pushResult: "push" })
+  },
+  watch: {
+    scan: function(n, o) {
+      if (n) {
+        this.pushResult({
+          // This this.$options.name serves to have the plugin name.
+          name: this.$options.name,
+          result: JSON.stringify(this.plugin_data.results)
+        });
+      }
+    }
+  },
+  beforeMount: function() {
+    this.pushResult({
+      // This this.$options.name serves to have the plugin name.
+      name: this.$options.name,
+      result: JSON.stringify(this.plugin_data.results) || ""
+    });
   }
 };
 </script>

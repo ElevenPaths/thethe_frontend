@@ -1,7 +1,8 @@
 <template>
   <v-dialog v-model="show" persistent max-width="290">
     <v-card>
-      <v-card-title class="headline">Change password</v-card-title>
+      <v-card-title class="subheading font-weight-bold">Change password</v-card-title>
+      <v-divider></v-divider>
       <v-card-text>
         <v-form>
           <v-layout column>
@@ -37,23 +38,25 @@
       </v-card-text>
       <v-spacer></v-spacer>
       <v-card-actions>
-        <v-flex>
-          <v-btn
-            color="green darken-1"
-            flat
-            @click.stop="reset_fields();$emit('change-password-closed');"
-          >Cancel</v-btn>
-          <v-btn color="red darken-1" flat @click.stop="doit" :disabled="password_match">Ok</v-btn>
-        </v-flex>
+        <v-layout>
+          <v-flex>
+            <the-button color="green darken-1" @click="doit" :disabled="password_match">Ok</the-button>
+          </v-flex>
+          <v-flex>
+            <the-button
+              color="red darken-1"
+              @click="reset_fields();$emit('change-password-closed');"
+            >Cancel</the-button>
+          </v-flex>
+        </v-layout>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script>
-import api_call from "../utils/api";
-import { AUTH_LOGOUT } from "../store/actions/auth";
-import { RESET_PROJECT } from "../store/actions/project";
+import { api_call } from "../utils/api";
+import TheButton from "./TheButton";
 
 export default {
   name: "change-password-dialog",
@@ -63,6 +66,7 @@ export default {
     new_password_1: "",
     new_password_2: ""
   }),
+  components: { TheButton },
   methods: {
     doit: function() {
       let params = {
@@ -104,9 +108,9 @@ export default {
 
     logout: function() {
       this.$store
-        .dispatch(AUTH_LOGOUT)
+        .dispatch("AUTH_LOGOUT")
         .then(() => {
-          this.$store.dispatch(RESET_PROJECT);
+          this.$store.dispatch("RESET_PROJECT");
         })
         .then(() => {
           this.$router.push("/login");

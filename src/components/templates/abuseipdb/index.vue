@@ -1,6 +1,5 @@
 <template>
   <v-flex>
-    <v-divider></v-divider>
     <v-layout>
       <v-flex>
         <v-layout align-center justify-center>
@@ -45,6 +44,7 @@
 
 <script>
 import { make_unique_list } from "../../../utils/utils";
+import { mapActions } from "vuex";
 
 export default {
   name: "abuseipdb",
@@ -53,6 +53,9 @@ export default {
   },
   data: function() {
     return {};
+  },
+  methods: {
+    ...mapActions("results", { pushResult: "push" })
   },
   computed: {
     resource: function() {
@@ -78,6 +81,22 @@ export default {
       let today = new Date().getTime();
       return Math.floor((today - past) / (24 * 60 * 60 * 60));
     }
+  },
+  // watch: {
+  //   scan: function(n, o) {
+  //     this.pushResult({
+  //       // This this.$options.name serves to have the plugin name.
+  //       name: this.$options.name,
+  //       result: this.plugin_data.results.data.domain || ""
+  //     });
+  //   }
+  // },
+  beforeMount: function() {
+    this.pushResult({
+      // This this.$options.name serves to have the plugin name.
+      name: this.$options.name,
+      result: this.plugin_data.results.data.domain || ""
+    });
   }
 };
 </script>

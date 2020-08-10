@@ -1,42 +1,42 @@
 <template>
-  <v-flex class="text-xs-left">
-    <v-divider></v-divider>
-    <v-card>
-      <v-card-title>
-        <v-flex
-          title
-          v-if="resource.threatlists.length > 0"
-          class="red--text"
-        >This IP is included in the following threat lists:</v-flex>
-        <v-flex v-else title class="green--text">This IP is not included in any thread list</v-flex>
-      </v-card-title>
-      <v-card-text>
-        <v-flex v-for="threatlist in resource.threatlists" :key="threatlist">
-          {{
-          threatlist
-          }}
-        </v-flex>
-      </v-card-text>
-    </v-card>
-  </v-flex>
+  <v-container>
+    <v-layout v-if="plugin_data.result_status[0] === 1" wrap>
+      <the-card-descriptor :items="resource.results" title="Results"></the-card-descriptor>
+    </v-layout>
+  </v-container>
 </template>
 
 <script>
 import { make_unique_list } from "../../../utils/utils";
+import TheCardDescriptor from "../../TheCardDescriptor";
+import { mapActions } from "vuex";
 
 export default {
   name: "onyphe",
   props: {
     plugin_data: Object
   },
+  components: {
+    TheCardDescriptor
+  },
   data: function() {
     return {};
   },
   computed: {
     resource: function() {
-      let plugin_result = { ...this.plugin_data.results };
+      let plugin_result = { ...this.plugin_data };
       return plugin_result;
     }
+  },
+  methods: {
+    ...mapActions("results", { pushResult: "push" })
+  },
+  beforeMount: function() {
+    this.pushResult({
+      // This this.$options.name serves to have the plugin name.
+      name: this.$options.name,
+      result: JSON.stringify(this.plugin_data.results) || ""
+    });
   }
 };
 </script>

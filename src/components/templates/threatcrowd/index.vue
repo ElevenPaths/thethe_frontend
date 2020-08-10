@@ -604,6 +604,7 @@
 <script>
 import { make_unique_list, from_python_time } from "../../../utils/utils";
 import SecLink from "../../SecLink";
+import { mapActions } from "vuex";
 
 export default {
   name: "threatcrowd",
@@ -620,7 +621,6 @@ export default {
   computed: {
     resource: function() {
       let plugin_result = this.plugin_data.results;
-
       this.resource_type = this.$store.getters.get_resource_type(
         this.plugin_data.resource_id
       );
@@ -628,6 +628,7 @@ export default {
     }
   },
   methods: {
+    ...mapActions("results", { pushResult: "push" }),
     formatted_time: function(ts) {
       let t = new Date(ts);
       return `${t.toLocaleDateString()} at ${t.toLocaleTimeString()}`;
@@ -635,6 +636,13 @@ export default {
     copy_content: async function(data) {
       await navigator.clipboard.writeText(data);
     }
+  },
+  beforeMount: function() {
+    this.pushResult({
+      // This this.$options.name serves to have the plugin name.
+      name: this.$options.name,
+      result: JSON.stringify(this.plugin_data.results) || ""
+    });
   }
 };
 </script>

@@ -36,17 +36,23 @@
       </v-card-text>
       <v-divider></v-divider>
       <v-card-actions>
-        <v-layout align-center justify-center>
+        <v-layout align-center justify-center row fill-height>
+          <v-flex></v-flex>
           <v-flex>
-            <v-btn
-              color="yellow darken-1"
-              flat
-              :disabled="!modified"
-              @click.stop="send_apikeys(), $emit('apikeys-closed')"
-            >upload</v-btn>
-            <v-btn color="red darken-1" flat @click.stop="close_dialog">Close</v-btn>
+            <v-layout>
+              <v-flex>
+                <the-button
+                  color="yellow darken-1"
+                  :disabled="!modified"
+                  @click="send_apikeys(), $emit('apikeys-closed')"
+                >upload</the-button>
+              </v-flex>
+              <v-flex>
+                <the-button color="red darken-1" @click="close_dialog">Close</the-button>
+              </v-flex>
+            </v-layout>
           </v-flex>
-          <v-flex shrink text-xs-right>
+          <v-flex text-xs-right>
             <v-icon v-if="password" color="green" @click.stop="toggle_password">visibility_off</v-icon>
             <v-icon v-else color="red" @click.stop="toggle_password">visibility</v-icon>
           </v-flex>
@@ -64,15 +70,17 @@
 </template>
 
 <script>
-import api_call from "../utils/api";
+import { api_call } from "../utils/api";
 import ApiKeyDetails from "./ApiKeyDetails.vue";
 import DeleteDialog from "./DeleteDialog";
+import TheButton from "./TheButton";
 
 export default {
   props: { show: Boolean },
   components: {
     ApiKeyDetails,
-    DeleteDialog
+    DeleteDialog,
+    TheButton
   },
   data() {
     return {
@@ -118,14 +126,22 @@ export default {
         url: "/api/get_apikeys"
       };
 
-      api_call(params).then(resp => {
-        resp.data.sort((a, b) => {
-          if (a.name > b.name) return 1;
-          if (b.name > a.name) return -1;
-          return 0;
+      api_call(params)
+        .then(resp => {
+          resp.data.sort((a, b) => {
+            if (a.name > b.name) return 1;
+            if (b.name > a.name) return -1;
+            return 0;
+          });
+          this.apikeys = resp.data;
+        })
+        .catch(err => {
+          this.$notify({
+            title: "Error",
+            text: err.data.error_message,
+            type: "error"
+          });
         });
-        this.apikeys = resp.data;
-      });
     },
     send_apikeys: function() {
       var params = {

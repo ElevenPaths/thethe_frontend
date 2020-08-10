@@ -10,7 +10,7 @@
         <v-divider></v-divider>
         <v-card-actions v-if="is_resource_selected">
           <v-flex px-2>
-            <v-layout align-center justify-center row>
+            <v-layout align-center justify-start wrap>
               <v-flex>
                 <plugin-selector :resource="selected_resource">
                   <v-tooltip bottom>
@@ -102,7 +102,9 @@
               :class="{ selected: selected_resource._id === item._id }"
             >
               <v-list-tile-content>
-                <v-list-tile-title v-text="item.canonical_name"></v-list-tile-title>
+                <v-list-tile-title
+                  v-text="item.resource_type === 'hash'? item.hash:item.canonical_name"
+                ></v-list-tile-title>
                 <v-list-tile-sub-title v-if="headers.length > 1">
                   {{
                   item[headers[1].value]
@@ -112,11 +114,9 @@
             </v-list-tile>
           </v-list>
         </v-flex>
+        <v-divider></v-divider>
         <v-flex>
-          <v-flex v-if="is_resource_selected">
-            <v-divider></v-divider>
-            <tags :resource="selected_resource" :show_tags="open_tags"></tags>
-          </v-flex>
+          <tags-ng :show="open_tags" :resource_id="selected_resource._id" @close="open_tags=false"></tags-ng>
         </v-flex>
         <delete-dialog
           title="Are you sure?"
@@ -151,9 +151,11 @@
 import DeleteDialog from "./DeleteDialog";
 import ResourceDetail from "./ResourceDetail";
 import PluginSelector from "./PluginSelector";
-import Tags from "./Tags";
+import TagsNg from "./TagsNg";
 
 import { object_is_empty } from "../utils/utils";
+import { api_call } from "../utils/api";
+
 import { mapActions } from "vuex";
 
 export default {
@@ -163,7 +165,7 @@ export default {
     DeleteDialog,
     ResourceDetail,
     PluginSelector,
-    Tags
+    TagsNg
   },
   props: {
     sortcriteria: {

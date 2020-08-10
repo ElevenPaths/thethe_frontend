@@ -1,7 +1,12 @@
 <template>
-  <v-btn flat icon small color="grey" @click="copy_content()">
-    <v-icon small>mdi-content-copy</v-icon>
-  </v-btn>
+  <v-tooltip bottom>
+    <template v-slot:activator="{ on }">
+      <v-btn flat icon small color="grey" @click="copy_content()">
+        <v-icon small v-on="on">mdi-content-copy</v-icon>
+      </v-btn>
+    </template>
+    <span>Copy content to clipboard</span>
+  </v-tooltip>
 </template>
 
 <script>

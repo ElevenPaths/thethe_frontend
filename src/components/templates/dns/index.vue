@@ -94,6 +94,7 @@
 
 <script>
 import { make_unique_list } from "../../../utils/utils";
+import { mapActions } from "vuex";
 
 export default {
   name: "dns",
@@ -113,6 +114,7 @@ export default {
   },
 
   methods: {
+    ...mapActions("results", { pushResult: "push" }),
     not_null: function() {
       for (let property in this.resource) {
         if (this.resource[property]) {
@@ -121,6 +123,15 @@ export default {
       }
       return false;
     }
+  },
+  beforeMount: function() {
+    let result = [];
+    result.push(this.resource.A, this.resource.NS, this.resource.MX);
+    this.pushResult({
+      // This this.$options.name serves to have the plugin name.
+      name: this.$options.name,
+      result: JSON.stringify(result.flat()) || ""
+    });
   }
 };
 </script>

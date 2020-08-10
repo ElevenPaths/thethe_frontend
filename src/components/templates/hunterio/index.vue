@@ -38,10 +38,7 @@
 
     <v-flex>
       <v-expansion-panel>
-        <v-expansion-panel-content
-          v-for="email in resource.emails"
-          :key="email.value"
-        >
+        <v-expansion-panel-content v-for="email in resource.emails" :key="email.value">
           <template v-slot:header>
             <v-layout align-center>
               <v-flex subheading lg3>{{ email.value }}</v-flex>
@@ -59,8 +56,7 @@
                   :width="15"
                   :value="email.confidence"
                   :color="confidence_score_color(email.confidence)"
-                  >{{ email.confidence }}%</v-progress-circular
-                >
+                >{{ email.confidence }}%</v-progress-circular>
               </v-flex>
               <v-flex lg1 subheading>
                 <v-layout column>
@@ -70,8 +66,7 @@
                       rel="noopener noreferer"
                       target="_blank"
                       :href="`https://linkedin.com/in/${email.linkedin}`"
-                      >{{ email.linkedin }}</a
-                    >
+                    >{{ email.linkedin }}</a>
                   </v-flex>
                   <v-flex v-if="email.twitter">
                     <v-icon color="blue lighten-2">mdi-twitter</v-icon>
@@ -79,8 +74,7 @@
                       rel="noopener noreferer"
                       target="_blank"
                       :href="`https://twitter.com/${email.twitter}`"
-                      >{{ email.twitter }}</a
-                    >
+                    >{{ email.twitter }}</a>
                   </v-flex>
                 </v-layout>
               </v-flex>
@@ -128,8 +122,7 @@
                         rel="noopener noreferer"
                         target="_blank"
                         :href="source.uri"
-                        >{{ source.uri }}</a
-                      >
+                      >{{ source.uri }}</a>
                     </v-flex>
                   </v-layout>
                 </v-flex>
@@ -146,6 +139,7 @@
 
 <script>
 import { make_unique_list } from "../../../utils/utils";
+import { mapActions } from "vuex";
 
 export default {
   name: "hunterio",
@@ -163,6 +157,7 @@ export default {
   },
 
   methods: {
+    ...mapActions("results", { pushResult: "push" }),
     confidence_score_color: function(score) {
       if (score < 33) {
         return "red";
@@ -178,6 +173,15 @@ export default {
       let emails = this.resource.emails.map(elem => elem.value);
       await navigator.clipboard.writeText(emails);
     }
+  },
+  beforeMount: function() {
+    let data = [];
+    data.push(this.resource.emails.map(e => e.value));
+    this.pushResult({
+      // This this.$options.name serves to have the plugin name.
+      name: this.$options.name,
+      result: JSON.stringify(data.flat()) || ""
+    });
   }
 };
 </script>

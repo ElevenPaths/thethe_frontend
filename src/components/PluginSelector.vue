@@ -66,7 +66,7 @@
 </template>
 
 <script>
-import api_call from "../utils/api";
+import { api_call } from "../utils/api";
 import { timestamp_diff_from_now } from "../utils/utils";
 
 import ChipTimeFromNow from "./ChipTimeFromNow";

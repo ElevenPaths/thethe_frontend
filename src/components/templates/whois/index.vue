@@ -198,6 +198,7 @@
 
 <script>
 import { make_unique_list } from "../../../utils/utils";
+import { mapActions } from "vuex";
 
 export default {
   name: "whois",
@@ -208,6 +209,7 @@ export default {
     return {};
   },
   methods: {
+    ...mapActions("results", { pushResult: "push" }),
     is_country_code: function(code) {
       if (code.length > 3) {
         return false;
@@ -244,6 +246,13 @@ export default {
 
       return plugin_result;
     }
+  },
+  beforeMount: function() {
+    this.pushResult({
+      // This this.$options.name serves to have the plugin name.
+      name: this.$options.name,
+      result: JSON.stringify(this.plugin_data.results) || ""
+    });
   }
 };
 </script>

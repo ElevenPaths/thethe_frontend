@@ -26,12 +26,17 @@
                   prepend-icon="lock"
                   type="password"
                   v-model="password"
+                  @keyup.enter="login"
                 ></v-text-field>
               </v-form>
             </v-card-text>
             <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn type="submit" color="primary" form="login_form">Login</v-btn>
+              <v-layout>
+                <v-spacer></v-spacer>
+                <v-flex xs12>
+                  <the-button color="blue" @click="login">Login</the-button>
+                </v-flex>
+              </v-layout>
             </v-card-actions>
             <template v-if="auth_status === 'error'">
               <v-alert
@@ -42,7 +47,6 @@
             </template>
           </v-card>
         </v-layout>
-        <status-bar></status-bar>
         <!-- <img src="../../static/images/logo_lab_11paths.png" height="64" /> -->
       </v-container>
     </v-content>
@@ -50,15 +54,14 @@
 </template>
 
 <script>
-import StatusBar from "./StatusBar";
+import TheButton from "./TheButton";
 
-import { AUTH_REQUEST } from "../store/actions/auth";
 import { mapGetters } from "vuex";
-import api_call from "../utils/api";
+import { api_call } from "../utils/api";
 
 export default {
   components: {
-    StatusBar
+    TheButton
   },
   data() {
     return {
@@ -70,7 +73,7 @@ export default {
     login: function() {
       const { username, password } = this;
       this.$store
-        .dispatch(AUTH_REQUEST, { username, password })
+        .dispatch("AUTH_REQUEST", { username, password })
         .then(() => {
           this.$router.push("/");
         })
@@ -86,7 +89,7 @@ export default {
       url: "/api/check_init"
     })
       .then(resp => {
-        if (resp.data) {
+        if (!resp.data) {
           this.$router.push("/init");
         }
       })
@@ -95,9 +98,7 @@ export default {
       });
 
     if (this.$store.getters["is_authenticated"]) {
-      if (this.$route.name !== "login") {
-        this.$router.push("/login");
-      }
+      this.$router.push("/");
     }
   }
 };

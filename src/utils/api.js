@@ -6,8 +6,6 @@ if (process.env.NODE_ENV === "development") {
 } else {
 }
 
-import { AUTH_LOGOUT } from "../store/actions/auth";
-import { RESET_PROJECT } from "../store/actions/project";
 import router from "../router";
 import store from "../store";
 
@@ -25,7 +23,7 @@ axios.interceptors.response.use(
     if (error.response) {
       switch (error.response.status) {
         case 401:
-          store.dispatch(AUTH_LOGOUT);
+          store.dispatch("AUTH_LOGOUT");
           if (
             router.history.current.fullPath === "/login" ||
             router.history.current.fullPath === "/init"
@@ -45,7 +43,7 @@ axios.interceptors.response.use(
     // Deal with server offline
     if (!error.status) {
       //TODO: Should return a Promise with a message to let know user server is down.
-      store.dispatch(RESET_PROJECT);
+      store.dispatch("RESET_PROJECT");
       console.log("Server appears to be down");
       router.push("/wait");
     }
@@ -63,4 +61,4 @@ const api_call = ({ url, ...args }) => {
   return axios.post(url, args, { headers: headers });
 };
 
-export default api_call;
+export { api_call };

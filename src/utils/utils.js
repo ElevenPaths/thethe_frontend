@@ -10,7 +10,7 @@ function make_unique_list(element_arg, lower = true) {
   }
 
   if (Array.isArray(element)) {
-    element = Array.from(new Set(element.map(el => el.toLowerCase())));
+    element = Array.from(new Set(element.map((el) => el.toLowerCase())));
   } else {
     if (lower) {
       element = [element.toLowerCase()];
@@ -22,9 +22,9 @@ function make_unique_list(element_arg, lower = true) {
 }
 
 function from_python_time(python_time) {
-  let date = new Date(python_time * 1000);
+  let d = new Date(python_time * 1000);
 
-  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+  return `${d.toLocaleDateString()} at ${d.toLocaleTimeString()}`;
 }
 
 /*
@@ -57,5 +57,5 @@ export {
   make_unique_list,
   from_python_time,
   timestamp_diff_from_now,
-  copy_content
+  copy_content,
 };

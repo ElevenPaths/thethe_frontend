@@ -20,19 +20,19 @@
               <v-switch v-model="toggle_differ" label="diff"></v-switch>
             </v-flex>
             <v-flex xs8>
-              <v-btn v-if="current_timestamp > 0" flat icon color="primary" @click.stop="to_past">
-                <v-icon>mdi-arrow-left</v-icon>
-              </v-btn>
-              <chip-time-from-now :timestamp="timestamp"></chip-time-from-now>
-              <v-btn
-                v-if="current_timestamp < (timemachine.length - 1)"
-                flat
-                icon
-                color="primary"
-                @click.stop="to_future"
-              >
-                <v-icon>mdi-arrow-right</v-icon>
-              </v-btn>
+              <v-flex v-if="current_timestamp > 0">
+                <v-btn flat icon color="primary" @click.stop="to_past">
+                  <v-icon>mdi-arrow-left</v-icon>
+                </v-btn>
+              </v-flex>
+              <v-flex>
+                <chip-time-from-now :timestamp="timestamp"></chip-time-from-now>
+              </v-flex>
+              <v-flex v-if="current_timestamp < (timemachine.length - 1)">
+                <v-btn flat icon color="primary" @click.stop="to_future">
+                  <v-icon>mdi-arrow-right</v-icon>
+                </v-btn>
+              </v-flex>
             </v-flex>
           </v-layout>
 
@@ -43,9 +43,6 @@
               :timestamp_index="current_timestamp"
             ></differ>
           </v-flex>
-        </v-flex>
-        <v-flex v-else>
-          <chip-time-from-now :timestamp="timestamp"></chip-time-from-now>
         </v-flex>
       </v-layout>
     </v-flex>

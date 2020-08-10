@@ -1,7 +1,6 @@
 <template>
   <v-flex class="text-xs-left">
-    <v-divider></v-divider>
-    <v-card>
+    <v-card v-if="plugin_data.result_status[0] === 1">
       <v-card-title>
         <v-flex subheading>Maltiverse results for this resource</v-flex>
       </v-card-title>
@@ -15,8 +14,7 @@
             <v-chip
               :color="classifier_color(resource.classification)"
               class="font-weight-bold"
-              >{{ resource.classification }}</v-chip
-            >
+            >{{ resource.classification }}</v-chip>
           </v-flex>
 
           <v-flex v-if="resource.entropy">
@@ -25,9 +23,11 @@
                 <v-label>Domain entropy</v-label>
               </v-flex>
               <v-flex>
-                <v-chip class="font-weight-bold">{{
+                <v-chip class="font-weight-bold">
+                  {{
                   resource.entropy.toFixed(2)
-                }}</v-chip>
+                  }}
+                </v-chip>
               </v-flex>
             </v-layout>
           </v-flex>
@@ -39,9 +39,11 @@
               <v-label>Description</v-label>
             </v-flex>
             <v-flex lg3>
-              <v-chip class="font-weight-bold">{{
+              <v-chip class="font-weight-bold">
+                {{
                 blacklist.description
-              }}</v-chip>
+                }}
+              </v-chip>
             </v-flex>
             <v-flex offset-xs-1 lg1>
               <v-label>Source</v-label>
@@ -72,6 +74,7 @@
         </v-layout>
       </v-card-text>
     </v-card>
+    <v-flex v-else text-xs-center title>{{resource.message}}</v-flex>
   </v-flex>
 </template>
 

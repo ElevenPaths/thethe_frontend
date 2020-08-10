@@ -513,9 +513,9 @@
           </v-card-text>
           <v-flex class="scrollable">
             <v-card-text v-for="(result, index) in resource.avdetect.results" :key="index">
-              <v-layout v-for="(value, key) in result" :key="key">
-                <v-flex xs4 class="font-weight-bold" text-xs-right>{{ key }}</v-flex>
-                <v-flex text-xs-left>{{ value }}</v-flex>
+              <v-layout v-for="(av, index) in result.av_detections" :key="index" fill-height>
+                <v-flex xs6 class="font-weight-bold" text-xs-right>{{ av.av }}</v-flex>
+                <v-flex xs6 text-xs-left>{{ av.detection }}</v-flex>
               </v-layout>
             </v-card-text>
           </v-flex>
@@ -563,6 +563,7 @@
 <script>
 import SecLink from "../../SecLink";
 import { countryCode } from "../../../utils/country2ccode";
+import { mapActions } from "vuex";
 
 export default {
   name: "threatminer",
@@ -580,6 +581,7 @@ export default {
     }
   },
   methods: {
+    ...mapActions("results", { pushResult: "push" }),
     countryCode2: function(country) {
       return countryCode(country);
     },
@@ -590,6 +592,13 @@ export default {
     copy_content: async function(data) {
       await navigator.clipboard.writeText(data);
     }
+  },
+  beforeMount: function() {
+    this.pushResult({
+      // This this.$options.name serves to have the plugin name.
+      name: this.$options.name,
+      result: JSON.stringify(this.plugin_data.results) || ""
+    });
   }
 };
 </script>

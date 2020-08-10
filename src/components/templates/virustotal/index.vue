@@ -8,6 +8,7 @@
       </v-card-text>
     </v-card>
   </v-flex>
+
   <v-flex v-else-if="resource_type === 'domain'" class="text-xs-left">
     <v-layout wrap>
       <v-flex v-if="resource.domain_siblings.length > 0">
@@ -53,7 +54,7 @@
           </v-card-title>
           <v-divider></v-divider>
           <v-card-text>
-            <v-flex class="siblings_list">
+            <v-flex class="scrollable">
               <div v-for="(domain, index) in domain_siblings_filter_list" :key="index">{{ domain }}</div>
             </v-flex>
           </v-card-text>
@@ -373,7 +374,8 @@
       </v-flex>
     </v-layout>
   </v-flex>
-  <v-flex v-else-if="resource_type === 'hash' || resource_type === 'ip'" class="text-xs-left">
+
+  <v-flex v-else-if="resource_type === 'hash'" class="text-xs-left">
     <v-card>
       <v-card-title class="title">VirusTotal information</v-card-title>
       <v-divider></v-divider>
@@ -618,11 +620,320 @@
       </v-card-text>
     </v-card>
   </v-flex>
+
+  <v-flex v-else-if="resource_type === 'ip'" class="text-xs-left">
+    <v-card>
+      <v-card-title class="title">VirusTotal information</v-card-title>
+      <v-divider></v-divider>
+      <v-card-text>
+        <v-layout justify-center wrap>
+          <v-flex v-if="resource.whois">
+            <v-card>
+              <v-card-title class="subheading">
+                <v-flex>Whois</v-flex>
+                <v-flex v-if="resource.whois_timestamp">
+                  <v-chip>{{ new Date(resource.whois_timestamp *1000).toDateString() }}</v-chip>
+                </v-flex>
+                <v-spacer></v-spacer>
+                <v-flex>
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-btn flat color="grey" v-on="on" @click.stop="copy_content(resource.whois)">
+                        <v-icon>file_copy</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Copy to clipboard</span>
+                  </v-tooltip>
+                </v-flex>
+              </v-card-title>
+              <v-divider></v-divider>
+              <v-card-text>
+                <v-flex>
+                  <v-textarea rows="14" readonly :value="resource.whois" class="subheading"></v-textarea>
+                </v-flex>
+              </v-card-text>
+            </v-card>
+          </v-flex>
+
+          <v-flex v-if="resource.resolutions.length > 0">
+            <v-card>
+              <v-card-title class="subheading">
+                <v-flex>Resolutions</v-flex>
+                <v-flex>
+                  <v-chip>{{ resource.resolutions.length }}</v-chip>
+                </v-flex>
+                <v-flex>
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-btn
+                        flat
+                        color="grey"
+                        v-on="on"
+                        @click.stop="
+                      copy_content(
+                      resource.resolutions.map(elem => elem.hostname).join('\n')
+                      )
+                    "
+                      >
+                        <v-icon>file_copy</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Copy domains to clipboard</span>
+                  </v-tooltip>
+                </v-flex>
+              </v-card-title>
+              <v-divider></v-divider>
+              <v-card-text>
+                <v-flex scrollable>
+                  <v-card v-for="(item, index) in resource.resolutions" :key="index">
+                    <v-card-title>
+                      <v-layout align-center justify-center>
+                        <v-flex text-xs-left>{{ item.hostname }}</v-flex>
+                        <v-flex text-xs-right>{{ item.last_resolved }}</v-flex>
+                      </v-layout>
+                    </v-card-title>
+                  </v-card>
+                </v-flex>
+              </v-card-text>
+            </v-card>
+          </v-flex>
+
+          <v-flex v-if="resource.detected_urls.length > 0">
+            <v-card>
+              <v-card-title class="subheading">
+                <v-flex>Detected URLs</v-flex>
+                <v-flex>
+                  <v-chip>{{ resource.detected_urls.length }}</v-chip>
+                </v-flex>
+                <v-spacer></v-spacer>
+                <v-flex>
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-btn
+                        flat
+                        color="grey"
+                        v-on="on"
+                        @click.stop="
+                      copy_content(
+                        resource.detected_urls.map(elem => elem.url).join('\n')
+                      )
+                    "
+                      >
+                        <v-icon>file_copy</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Copy URLs to clipboard</span>
+                  </v-tooltip>
+                </v-flex>
+              </v-card-title>
+              <v-divider></v-divider>
+              <v-card-text>
+                <v-flex>
+                  <v-card v-for="(item, index) in resource.detected_urls" :key="index">
+                    <v-card-title>
+                      <v-flex text-xs-left>{{ item.url }}</v-flex>
+                      <v-flex xs2 text-xs-right>{{ item.scan_date }}</v-flex>
+                      <v-flex xs2 text-xs-right>
+                        <v-progress-circular
+                          :rotate="90"
+                          :size="100"
+                          :width="15"
+                          :value="get_percentage(item.positives, item.total)"
+                          :color="get_detection_color(item.positives, item.total)"
+                        >
+                          <span class="font-weight-bold">
+                            {{
+                            get_percentage(item.positives, item.total)
+                            }}&nbsp;%
+                          </span>
+                        </v-progress-circular>
+                      </v-flex>
+                    </v-card-title>
+                  </v-card>
+                </v-flex>
+              </v-card-text>
+            </v-card>
+          </v-flex>
+
+          <v-flex v-if="resource.undetected_urls.length > 0">
+            <v-card>
+              <v-card-title class="subheading">
+                <v-flex>Undetected URLs</v-flex>
+                <v-flex>
+                  <v-chip>{{ resource.undetected_urls.length }}</v-chip>
+                </v-flex>
+                <v-spacer></v-spacer>
+                <v-flex>
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-btn
+                        flat
+                        color="grey"
+                        v-on="on"
+                        @click.stop="
+                      copy_content(
+                        resource.undetected_urls.map(elem => elem[0]).join('\n')
+                      )
+                    "
+                      >
+                        <v-icon>file_copy</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Copy URLs to clipboard</span>
+                  </v-tooltip>
+                </v-flex>
+              </v-card-title>
+              <v-divider></v-divider>
+              <v-card-text>
+                <v-flex>
+                  <v-card v-for="(item, index) in resource.undetected_urls" :key="index">
+                    <v-card-title v-if="item.length == 5">
+                      <v-flex text-xs-left>{{ item[0] }}</v-flex>
+                      <v-flex xs12 text-xs-left>{{ item[1] }}</v-flex>
+                    </v-card-title>
+                  </v-card>
+                </v-flex>
+              </v-card-text>
+            </v-card>
+          </v-flex>
+
+          <v-flex v-if="resource.undetected_downloaded_samples.length > 0">
+            <v-card>
+              <v-card-title class="subheading">
+                <v-flex>Undetected downloaded samples</v-flex>
+                <v-flex>
+                  <v-chip>
+                    {{
+                    resource.undetected_downloaded_samples.length
+                    }}
+                  </v-chip>
+                </v-flex>
+                <v-spacer></v-spacer>
+                <v-flex>
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-btn
+                        flat
+                        color="grey"
+                        v-on="on"
+                        @click.stop="
+                        copy_content(
+                          resource.undetected_downloaded_samples
+                            .map(elem => elem.sha256)
+                            .join('\n')
+                        )
+                      "
+                      >
+                        <v-icon>file_copy</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Copy hashes to clipboard</span>
+                  </v-tooltip>
+                </v-flex>
+              </v-card-title>
+              <v-divider></v-divider>
+              <v-card-text>
+                <v-flex>
+                  <v-card
+                    v-for="(item, index) in resource.undetected_downloaded_samples"
+                    :key="index"
+                  >
+                    <v-card-title>
+                      <v-flex>{{ item.sha256 }}</v-flex>
+                      <v-flex xs2 text-xs-right>{{ item.date }}</v-flex>
+                      <v-flex xs3 text-xs-right>
+                        <v-progress-circular
+                          :rotate="90"
+                          :size="100"
+                          :width="15"
+                          :value="get_percentage(item.positives, item.total)"
+                          :color="get_detection_color(item.positives, item.total)"
+                        >
+                          <span class="font-weight-bold">
+                            {{
+                            get_percentage(item.positives, item.total)
+                            }}&nbsp;%
+                          </span>
+                        </v-progress-circular>
+                      </v-flex>
+                    </v-card-title>
+                  </v-card>
+                </v-flex>
+              </v-card-text>
+            </v-card>
+          </v-flex>
+
+          <v-flex v-if="resource.detected_downloaded_samples.length > 0">
+            <v-card>
+              <v-card-title class="subheading">
+                <v-flex>Detected downloaded samples</v-flex>
+                <v-flex>
+                  <v-chip>{{ resource.detected_downloaded_samples.length }}</v-chip>
+                </v-flex>
+                <v-spacer></v-spacer>
+                <v-flex>
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-btn
+                        flat
+                        color="grey"
+                        v-on="on"
+                        @click.stop="
+                        copy_content(
+                          resource.detected_downloaded_samples
+                            .map(elem => elem.sha256)
+                            .join('\n')
+                        )
+                      "
+                      >
+                        <v-icon>file_copy</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Copy hashes to clipboard</span>
+                  </v-tooltip>
+                </v-flex>
+              </v-card-title>
+              <v-divider></v-divider>
+              <v-card-text>
+                <v-flex>
+                  <v-card
+                    v-for="(item, index) in resource.detected_downloaded_samples"
+                    :key="index"
+                  >
+                    <v-card-title>
+                      <v-flex>{{ item.sha256 }}</v-flex>
+                      <v-flex xs2 text-xs-right>{{ item.date }}</v-flex>
+                      <v-flex xs3 text-xs-right>
+                        <v-progress-circular
+                          :rotate="90"
+                          :size="100"
+                          :width="15"
+                          :value="get_percentage(item.positives, item.total)"
+                          :color="get_detection_color(item.positives, item.total)"
+                        >
+                          <span class="font-weight-bold">
+                            {{
+                            get_percentage(item.positives, item.total)
+                            }}&nbsp;%
+                          </span>
+                        </v-progress-circular>
+                      </v-flex>
+                    </v-card-title>
+                  </v-card>
+                </v-flex>
+              </v-card-text>
+            </v-card>
+          </v-flex>
+        </v-layout>
+      </v-card-text>
+    </v-card>
+  </v-flex>
 </template>
 
 <script>
 import { make_unique_list, from_python_time } from "../../../utils/utils";
 import SecLink from "../../SecLink";
+import { mapActions } from "vuex";
 
 export default {
   name: "virustotal",
@@ -630,13 +941,13 @@ export default {
   props: {
     plugin_data: Object
   },
-  components: { SecLink },
 
   data: function() {
     return { filter_siblings: "", resource_type: null };
   },
 
   methods: {
+    ...mapActions("results", { pushResult: "push" }),
     get_percentage: function(positives, total) {
       if (total == 0) return 0;
 
@@ -706,12 +1017,19 @@ export default {
         });
       }
     }
+  },
+  beforeMount: function() {
+    this.pushResult({
+      // This this.$options.name serves to have the plugin name.
+      name: this.$options.name,
+      result: JSON.stringify(this.resource) || ""
+    });
   }
 };
 </script>
 
 <style scoped>
-.siblings_list {
+.scrollable {
   max-height: 500px;
   overflow-y: auto;
 }

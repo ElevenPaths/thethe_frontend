@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import api_call from "../utils/api";
+import { api_call } from "../utils/api";
 
 export default {
   name: "differ",
