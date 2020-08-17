@@ -135,15 +135,7 @@
 import TheButton from "./TheButton";
 
 import validator from "validator";
-import {
-  regexp_url,
-  regexp_ipv4,
-  regexp_hash,
-  regexp_email,
-  regexp_domain,
-  tlds,
-  ioc_scan
-} from "../utils/ioc_scan";
+import { extractIOC } from "ioc-extractor";
 
 import { mapGetters, mapActions } from "vuex";
 
@@ -200,30 +192,82 @@ export default {
         return resources;
       }
 
+      // From scan we have an object with <type_of_ioc>:[iocs]
+      // We need a list of [{ resource:ioc, type: one_of_this.types, color: one_of_this.colorize_type }]
+      // Our output must: scanned, classified, unique, filtered, patched, ordered
+
+      // Scanned
       let values = this.scan(this.resource_list_model);
 
-      // Avoid repeated entries
-      values = [...new Set(values)];
-
+      // Classified
       let classified_resources = [];
 
-      values.map(element => {
-        let resource_type = this.classify(element);
+      values.domains.map(elem =>
+        classified_resources.push({
+          resource: elem,
+          type: "domain",
+          color: this.colorize_type("domain")
+        })
+      );
 
-        if (Object.keys(resource_type).length !== 0) {
+      values.ipv4s.map(elem =>
+        classified_resources.push({
+          resource: elem,
+          type: "ip",
+          color: this.colorize_type("ip")
+        })
+      );
+
+      values.emails.map(elem =>
+        classified_resources.push({
+          resource: elem,
+          type: "email",
+          color: this.colorize_type("email")
+        })
+      );
+
+      values.urls.map(elem =>
+        classified_resources.push({
+          resource: elem,
+          type: "url",
+          color: this.colorize_type("url")
+        })
+      );
+
+      let hashes = ["md5s", "sha1s", "sha256s", "sha512s"];
+      hashes.map(hash =>
+        values[hash].map(elem =>
           classified_resources.push({
-            resource: element,
-            type: resource_type.type,
-            color: resource_type.color
-          });
-        }
-      });
+            resource: elem,
+            type: "hash",
+            color: this.colorize_type("hash")
+          })
+        )
+      );
 
+      // Sort
+      classified_resources = classified_resources.sort((a, b) =>
+        a.type.localeCompare(b.type)
+      );
+
+      // Filter
       classified_resources = classified_resources.filter(
         elem => !this.unlisted.includes(elem.resource)
       );
 
-      return classified_resources.sort((a, b) => a.type.localeCompare(b.type));
+      // Patch type
+      this.user_type_patch_list.map(patch => {
+        let e = classified_resources.find(
+          elem => elem.resource === patch.resource
+        );
+
+        if (e) {
+          e.type = patch.type;
+          e.color = this.colorize_type(e.type);
+        }
+      });
+
+      return classified_resources;
     }
   },
   methods: {
@@ -238,7 +282,7 @@ export default {
       this.scannedOff();
     },
     scan: function(tx) {
-      return ioc_scan(tx);
+      return extractIOC(tx);
     },
     colorize_type(type) {
       switch (type) {
@@ -257,52 +301,6 @@ export default {
         default:
           return "black";
       }
-    },
-    classify(resource) {
-      // Listen to user type patching
-      let patched = null;
-      this.user_type_patch_list.forEach(elem => {
-        if (elem.resource === resource) {
-          patched = { type: elem.type, color: this.colorize_type(elem.type) };
-        }
-      });
-      if (patched) {
-        return patched;
-      }
-
-      if (validator.isIP(resource, [4])) {
-        return { type: "ip", color: this.colorize_type("ip") };
-      }
-
-      if (validator.isEmail(resource)) {
-        return { type: "email", color: this.colorize_type("email") };
-      }
-
-      if (
-        validator.isURL(resource, {
-          protocols: ["http", "https", "hxxp", "ftp"],
-          require_valid_protocol: true,
-          require_protocol: true
-        })
-      ) {
-        return { type: "url", color: this.colorize_type("url") };
-      }
-
-      if (validator.isFQDN(resource)) {
-        return { type: "domain", color: this.colorize_type("domain") };
-      }
-
-      if (
-        validator.isHash(resource, "md5") ||
-        validator.isHash(resource, "sha1") ||
-        validator.isHash(resource, "sha256") ||
-        validator.isHash(resource, "sha384") ||
-        validator.isHash(resource, "sha512")
-      ) {
-        return { type: "hash", color: this.colorize_type("hash") };
-      }
-
-      return {};
     },
     send() {
       this.preprocess_resources.forEach(new_resource => {
